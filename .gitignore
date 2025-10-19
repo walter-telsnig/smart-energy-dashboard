@@ -1,0 +1,18 @@
+# Envs & IDE
+.venv/
+.env
+.vscode/
+.idea/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# OS / misc
+.DS_Store
+Thumbs.db
+
+# Local DBs (optional)
+*.sqlite3
+*.db
