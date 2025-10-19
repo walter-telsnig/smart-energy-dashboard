@@ -1,4 +1,4 @@
-## ⚡ Smart Energy Dashboard — Roadmap & Architecture Overview
+.ve## ⚡ Smart Energy Dashboard — Roadmap & Architecture Overview
 
 This project follows a **monolithic (modular monolith)** architecture built in Python 3.13 with FastAPI, SQLAlchemy, Alembic, and Docker.  
 It adheres to the **layered architecture** and **component principles** (ADP, SDP, SAP) from the *Software Architecture/AES* course at AAU Klagenfurt.
