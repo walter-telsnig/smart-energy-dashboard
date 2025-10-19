@@ -43,7 +43,7 @@ It will return a JSON file for the whole year 2026 (8760 points).
 
 ![Smart Energy Dashboard Preview](docs/images/Swagger_preview.png)
 
-Comments regarding principles from the lecture notes:
+## Comments regarding principles from the lecture notes:
 SRP: UI stays thin; CSV loading isolated in infra/pv/repository_csv.py.
 DIP: API depends on PVRepositoryPort via the adapter (we can later swap CSV for DB or live API whereas live API is not very likely *G*).
 ADP: The dependency arrows point inward (API → modules). Infra implements ports; domain is independent.
