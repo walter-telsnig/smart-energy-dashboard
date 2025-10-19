@@ -25,6 +25,16 @@ Implement FastAPI routes for the first domain (`accounts`):
 - Unit and integration tests via Pytest  
 🧭 *Applies SRP, DIP, ADP — clear separation between API, application logic, and persistence.*
 
+<Update 2025-10-19>
+| Layer                           | Status | Key Design Principle                       |
+| ------------------------------- | ------ | ------------------------------------------ |
+| **Domain (entities)**           | ✅      | SRP — pure business logic only             |
+| **Application (use-cases)**     | ✅      | DIP — depends on ports, not infrastructure |
+| **Infrastructure (SQLAlchemy)** | ✅      | ADP — depends inward, implements ports     |
+| **API (FastAPI routes)**        | ✅      | SRP + DIP — thin HTTP adapters only        |
+| **DB migrations (Alembic)**     | ✅      | version-controlled schema                  |
+| **Tests**                       | ✅      | unit + integration pass cleanly            |
+
 ---
 
 ### **Milestone 2 — Quality Gates (CI, typing, logging, errors)**
