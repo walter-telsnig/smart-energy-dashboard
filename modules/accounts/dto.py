@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from pydantic import BaseModel, EmailStr, Field
+from pydantic import ConfigDict
 
 class CreateUserDTO(BaseModel):
     email: EmailStr
@@ -14,5 +15,9 @@ class UserReadDTO(BaseModel):
     is_active: bool
     created_at: datetime
 
-    class Config:
-        from_attributes = True  # pydantic v2: support orm/entity mapping
+    # old Pydantic v1 style
+    # class Config:
+    #    from_attributes = True  # pydantic v2: support orm/entity mapping
+    
+    # new Pydantic v2 style
+    model_config = ConfigDict(from_attributes=True)
