@@ -35,6 +35,18 @@ Implement FastAPI routes for the first domain (`accounts`):
 | **DB migrations (Alembic)**     | ✅      | version-controlled schema                  |
 | **Tests**                       | ✅      | unit + integration pass cleanly            |
 
+# PV Test / mockup 
+Under infra/data/pv/pv_2026_hourly.csv we have prepared initial data for PV production for the year 2026 in hourly resolution.
+With uvicorn app.main:app --reload one can start the app and open the Swagger UI under http://127.0.0.1:8000/docs
+There you'll fine the API endpoint GET /api/v1/pv (default key pv_2026_hourly).
+It will return a JSON file for the whole year 2026 (8760 points).
+
+![Smart Energy Dashboard Preview](docs/images/Swagger_preview.png)
+
+Comments regarding principles from the lecture notes:
+SRP: UI stays thin; CSV loading isolated in infra/pv/repository_csv.py.
+DIP: API depends on PVRepositoryPort via the adapter (we can later swap CSV for DB or live API whereas live API is not very likely *G*).
+ADP: The dependency arrows point inward (API → modules). Infra implements ports; domain is independent.
 ---
 
 ### **Milestone 2 — Quality Gates (CI, typing, logging, errors)**
