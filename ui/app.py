@@ -1,6 +1,9 @@
 # Streamlit demo UI (read-only) for Milestone 1
 # Run: streamlit run ui/app.py
-import os, requests, pandas as pd, streamlit as st
+import os
+import requests
+import pandas as pd
+import streamlit as st
 
 API_BASE = os.getenv("API_BASE", "http://localhost:8000/api/v1")
 
