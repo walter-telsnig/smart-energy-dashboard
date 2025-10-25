@@ -153,15 +153,14 @@ ________________________________________________________________________________
 Tutorial Docker Postgres (there are just informations about Postgres in Docker): https://www.datacamp.com/tutorial/postgresql-docker
 
 
-Postgres-Infos
-POSTGRES_USER: postgres
-POSTGRES_DB: pv-db
-POSTGRES_PASSWORD: See WhatsApp Message
+Postgres-Infos are in the docker-compose.yml file.
 
 
 HOW TO INSTALL the Postgres Docker Container:
-1. Load ZIP file with docker image: docker load < postgres-docker.zip
-2. Run docker image in a container: docker run -d --name postgres-db -p 5432:5432 postgres-image
+1.  Go to where you have save the GitHub repo
+2.  Open there CMD
+3.  Use the command docker copose up -d
+4.  Check if the container is runing with the command docker ps
 
 
 HOW TO WORK WITH IT:
@@ -182,11 +181,4 @@ HOW TO ADD the server to pgAdmin(In Case my description isn't clearly. It is als
 5. Click at the Save Button and the Server is connected with pgAdmin
 
 
-HOW TO SAVE the Postgres Docker Container (If you change something in the database, please update the ZIP file or make another ZIP/TAR/etc. file):
-1. Commit the container in an image: docker commit postgres-db postgres-image
-2. Save the image in a ZIP/TAR/etc. file: docker save postgres-image > postgres-docker.zip (or in another file format)
-
-
-Steps after someone saved the container:
-1. Remove old container or just create a new container
-2. To create new container see HOW TO INSTALL the Postgres Docker Container
+Note: If you add data in the database, please save the queries as SQL file in the GitHub repo. So we have the same data.
