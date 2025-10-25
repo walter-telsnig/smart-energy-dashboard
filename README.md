@@ -157,7 +157,7 @@ Postgres-Infos are in the docker-compose.yml file.
 
 
 HOW TO INSTALL the Postgres Docker Container:
-1. IMPORTANT: Check if you have the pulled the commit with the docker-compose.yml file.
+1. IMPORTANT: Check if you have pulled the commit with the docker-compose.yml file.
 2. Go to where you have save the GitHub repo
 3. Open there CMD
 4. Use the command docker copose up -d
