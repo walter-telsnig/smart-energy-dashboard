@@ -178,6 +178,21 @@ git add .
 git commit -m "feat: <your message>"
 git push
 
+---
+
+### 💾 Local development database
+
+By default, the project uses a lightweight **SQLite** database named `dev.db`
+stored in the project root.
+
+- It will be **created automatically** when you first start the API.
+- You can inspect it using any SQLite viewer (e.g., VS Code “SQLite Viewer” extension).
+- It is **not versioned** — it’s ignored by `.gitignore` and safe to delete anytime.
+- For a clean start:
+  ```powershell
+  Remove-Item dev.db
+
+
 ### Docker Tutorial (Sabrina)
 ______________________________________________________________________________________
 Tutorial Docker Postgres (there are just informations about Postgres in Docker): https://www.datacamp.com/tutorial/postgresql-docker
