@@ -9,7 +9,10 @@ st.title("Smart Energy Dashboard — PV Viewer (M1 Demo)")
 try:
     hr = requests.get(f"{API_BASE.replace('/api/v1','')}/health", timeout=3)
     ok = (hr.status_code == 200 and hr.json().get("status") == "ok")
-    st.success("API healthy") if ok else st.warning(f"API health not ok: {hr.text}")
+    if ok:
+        st.success("API healthy")
+    else:
+        st.warning(f"API health not ok: {hr.text}")
 except Exception as e:
     st.error(f"API not reachable: {e}")
 
