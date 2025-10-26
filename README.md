@@ -95,60 +95,87 @@ Add an interactive, data-driven dashboard for energy insights.
 
 ## 🧭 Project Setup (for collaborators)
 
-### Prerequisites
-- Python 3.13.0
-- VS Code + Git (I use VScode but should work in Pycharm etc. too)
-- Docker Desktop (optional for later, currently it's realized with a local sqlite DB)
+### ⚙️ Prerequisites
+- 🐍 **Python 3.13**
+- 💻 **VS Code** + Git
+- 🐳 **Docker Desktop** *(optional; only needed from Milestone 3 onward)*
 
-### Clone the repository from GitHub to your local machine (i.e. AAU OneDrive)
+---
+
+### 🧩 1️⃣ Clone the repository
+```powershell
 git clone https://github.com/walter-telsnig/smart-energy-dashboard.git
 cd smart-energy-dashboard
 
-### Create a virtual environment
-py -3.13 -m venv .venv
-.\.venv\Scripts\Activate.ps1
+🪶 2️⃣ Create and activate the virtual environment
+python -m venv .venv
+.venv\Scripts\Activate.ps1
 
-### Install dependencies
+📦 3️⃣ Install dependencies
+pip install -U pip
 pip install -r requirements.txt
 
-### Create local environment file
-copy .env.example .env
+⚙️ 4️⃣ Configure environment
+Create a .env file (or copy from .env.example) with:
 
-Inside this .env file you should see:
-APP_ENV=dev
-DB_URL=sqlite:///./local.db
+SED_DB_URL=sqlite:///./dev.db
+API_BASE=http://localhost:8000/api/v1
 
-### Run Alembic migrations
-alembic upgrade head
+💡 SQLite is used for local development.
+Later milestones (M3 +) switch to Postgres via Docker Compose.
 
-This will create a "local.db" in your local folder.
-Later we can/will switch to a docker/postgres DB engine
+🚀 5️⃣ Run the API
+python -m uvicorn app.main:create_app --factory --reload --port 8000
 
-### Run tests
+Check:
+
+✅ Health: http://localhost:8000/health
+📘 Docs: http://localhost:8000/docs
+
+
+💡 6️⃣ Run the Streamlit UI
+.venv\Scripts\activate
+streamlit run ui/app.py
+
+🌐 UI available at: http://localhost:8501
+
+🧪 7️⃣ Run tests
 pytest -q
+✅ Expected: 5 passed in X.XXs
 
-You should get something like "[100%] 2 passed in X.XXs"
+🧭 8️⃣ Run via VS Code
 
-### Run the FastAPI app
-uvicorn app.main:create_app --factory --reload --port 8000
+Start either service with F5 using the predefined launch configurations:
 
-Then you should be able to see it under: http://localhost:8000/api/v1/health
+▶️ API (Uvicorn, factory)
 
-### Staying up to date
-Before you start to work:
+▶️ UI (Streamlit)
+
+🧰 9️⃣ ( Optional ) Run via Docker Compose
+docker compose up
+
+Services:
+
+⚙️ API → http://localhost:8000/health
+📊 UI → http://localhost:8501
+
+
+🧱 Folder Overview
+app/        FastAPI routers & app entrypoint
+modules/    Domain logic (e.g., accounts model)
+infra/      Database engine/session, CSV data, migrations
+core/       Cross-cutting settings, logging, error handling
+ui/         Streamlit demo (read-only dashboard)
+tests/      Unit + integration tests
+docs/       Architecture notes & ADRs
+
+🔁 Staying up to date
 git pull origin main
 
-When done:
+And after you changed something:
 git add .
-git commit -m "feat: <your changes>"
+git commit -m "feat: <your message>"
 git push
-
-### Done/Working so far
-✅ a functional database (local)
-✅ working Alembic migrations
-✅ a (more or less) clean monolithic structure
-✅ and a reproducible Python environment (if not please feedback)
-
 ______________________________________________________________________________________
 Tutorial Docker Postgres (there are just informations about Postgres in Docker): https://www.datacamp.com/tutorial/postgresql-docker
 

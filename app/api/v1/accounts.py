@@ -1,3 +1,21 @@
+"""
+Accounts API router (FastAPI)
+
+Exposes CRUD endpoints under /api/v1/accounts:
+- POST   /        -> create account (201)
+- GET    /        -> list accounts (200)
+- GET    /{id}    -> get account by id (200 or 404)
+- PATCH  /{id}    -> partial update via JSON body or query params (200, 404, 409, 422)
+- DELETE /{id}    -> delete account (204 or 404)
+
+Design (lecture slides principles):
+- SRP: HTTP + validation only; persistence via SQLAlchemy model in modules/accounts/model.py
+- DIP/ADP: DB session injected via infra.db.get_db; no engine creation in this layer
+- Versioning: '/api/v1' applied in app.main include_router; local prefix is '/accounts'
+- Pydantic v2 models (from_attributes=True); Email uniqueness guarded
+"""
+
+
 from fastapi import APIRouter, Depends, HTTPException, status, Body, Query
 from pydantic import BaseModel, EmailStr, ConfigDict
 from sqlalchemy.orm import Session

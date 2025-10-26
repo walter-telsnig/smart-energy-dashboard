@@ -1,0 +1,23 @@
+# ADR-001: Monolith First Architecture
+
+- **Status:** WiP (2025-10-26)
+- **Context:** The Smart Energy Dashboard needs a fast, low-risk path to a working vertical slice (API + data + simple UI) for Milestone 1. The team is small; requirements may evolve; premature distribution would increase operational complexity.
+- **Decision:** Build a **modular monolith** using Python (FastAPI, SQLAlchemy). Keep strict module boundaries (`modules/*`) and adapters in `infra/*`. Expose functionality via a single FastAPI process. Defer service decomposition until we have clear scalability or independence needs.
+- **Rationale:**
+  - **Speed & feedback:** One deployable unit reduces CI/CD friction and enables quicker iteration.
+  - **Simplicity:** Fewer moving parts (no service mesh, fewer network hops, easier local dev).
+  - **Evolutionary design:** Enforced boundaries (SRP/OCP/DIP, ADP/SDP/SAP) allow future extraction.
+- **Consequences:**
+  - **Positive:** Lower ops overhead; simpler debugging; cohesive codebase; faster M1 delivery.
+  - **Negative:** Single failure domain; limited independent scaling. We accept this for early phases.
+- **Implementation notes:**
+  - Layers: `app/` (API), `modules/` (domain), `infra/` (persistence, data), `core/` (cross-cutting).
+  - Versioning at the edge: routers use feature prefixes (e.g., `/accounts`, `/pv`), then `app.main` mounts at `/api/v1`.
+  - UI (Streamlit) is optional and **consumes** the API only (no direct DB access).
+- **Alternatives considered:**
+  - **Microservices now:** Rejected; higher complexity (networking, orchestration, CI/CD) for little early benefit.
+  - **Serverless:** Rejected for now; cold starts and state/data locality concerns.
+- **Migration path (later milestones):**
+  - Extract services where boundaries are stable (e.g., Accounts) by lifting `modules/<feature>` + `infra/<feature>` behind a network API.
+  - Introduce async workers if/when needed for heavy analytics.
+  - Add observability (metrics/tracing) and per-module ownership before splitting.
