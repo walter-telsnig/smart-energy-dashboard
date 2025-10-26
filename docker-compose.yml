@@ -1,0 +1,12 @@
+services:
+  db:
+    image: postgres:latest
+    container_name: postgres-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ppswy2026
+      POSTGRES_DB: pv-db
+    volumes:
+      - ./data:/var/lib/postgres/data

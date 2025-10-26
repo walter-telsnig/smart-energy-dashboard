@@ -149,4 +149,37 @@ git push
 ✅ a (more or less) clean monolithic structure
 ✅ and a reproducible Python environment (if not please feedback)
 
+______________________________________________________________________________________
+Tutorial Docker Postgres (there are just informations about Postgres in Docker): https://www.datacamp.com/tutorial/postgresql-docker
 
+
+Postgres-Infos are in the docker-compose.yml file.
+
+
+HOW TO INSTALL the Postgres Docker Container:
+1. IMPORTANT: Check if you have pulled the commit with the docker-compose.yml file.
+2. Go to where you have save the GitHub repo
+3. Open there CMD
+4. Use the command docker copose up -d
+5. Check if the container is runing with the command docker ps
+
+
+HOW TO WORK WITH IT:
+1. Start container: docker start postgres-db
+2. Stop container: docker stop postgres-db
+
+
+Variations to Query something: \
+a. Use PSQL in Command: docker exec -it postgres-db psql -U postgres -d pv-db \
+b. Use pgAdmin
+
+
+HOW TO ADD the server to pgAdmin(In Case my description isn't clearly. It is also described at the tutorial page: https://www.datacamp.com/tutorial/postgresql-docker?dc_referrer=https%3A%2F%2Fwww.google.com%2F#connecting-using-a-gui-tool-manyd):
+1. Right Click at Servers
+2. Register->Server
+3. In General tab, write the name of the server in the field "Name"
+4. In Connection, write "localhost" in the field "Host name/address" and the password in field "Password"
+5. Click at the Save Button and the Server is connected with pgAdmin
+
+
+Note: If you add data in the database, please save the queries as SQL file in the GitHub repo. So we have the same data.
