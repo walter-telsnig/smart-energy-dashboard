@@ -1,41 +1,82 @@
-# API = thin HTTP adapter. SRP: translate HTTP <-> use-cases/DTOs only.
-# ADP: API depends inward on application layer; no infra details leak here.
-# DIP: repo is injected at the edge.
+from fastapi import APIRouter, Depends, HTTPException, status, Body, Query
+from pydantic import BaseModel, EmailStr, ConfigDict
+from sqlalchemy.orm import Session
+from infra.db import get_db
+from modules.accounts.model import Account
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from modules.accounts.dto import CreateUserDTO, UserReadDTO
-from modules.accounts.use_cases import CreateUser, ListUsers, GetUser, UpdateUserName, DeleteUser
-from infra.accounts.repository_sqlalchemy import SQLAlchemyUserRepository
+router = APIRouter(prefix="/accounts", tags=["accounts"])
 
-router = APIRouter(prefix="/api/v1/accounts", tags=["accounts"])
+class AccountCreate(BaseModel):
+    email: EmailStr
+    full_name: str
 
-def get_repo():
-    return SQLAlchemyUserRepository()
+class AccountUpdate(BaseModel):
+    email: EmailStr | None = None
+    full_name: str | None = None
 
-@router.post("/", response_model=UserReadDTO, status_code=status.HTTP_201_CREATED)
-def create_user(payload: CreateUserDTO, repo=Depends(get_repo)):
-    return CreateUser(repo)(payload)
+class AccountRead(BaseModel):
+    id: int
+    email: EmailStr
+    full_name: str
+    model_config = ConfigDict(from_attributes=True)
 
-@router.get("/", response_model=list[UserReadDTO])
-def list_users(limit: int = 100, offset: int = 0, repo=Depends(get_repo)):
-    return list(ListUsers(repo)(limit=limit, offset=offset))
+def _get_account_or_404(db: Session, user_id: int) -> Account:
+    obj = db.get(Account, user_id)
+    if not obj:
+        raise HTTPException(status_code=404, detail="account not found")
+    return obj
 
-@router.get("/{user_id}", response_model=UserReadDTO)
-def get_user(user_id: int, repo=Depends(get_repo)):
-    out = GetUser(repo)(user_id)
-    if not out:
-        raise HTTPException(404, "User not found")
-    return out
+@router.post("/", response_model=AccountRead, status_code=status.HTTP_201_CREATED)
+def create_account(payload: AccountCreate, db: Session = Depends(get_db)):
+    exists = db.query(Account).filter(Account.email == payload.email).first()
+    if exists:
+        raise HTTPException(status_code=409, detail="email already exists")
+    obj = Account(email=payload.email, full_name=payload.full_name)
+    db.add(obj); db.commit(); db.refresh(obj)
+    return obj
 
-@router.patch("/{user_id}", response_model=UserReadDTO)
-def update_user_name(user_id: int, full_name: str, repo=Depends(get_repo)):
-    out = UpdateUserName(repo)(user_id, full_name)
-    if not out:
-        raise HTTPException(404, "User not found")
-    return out
+@router.get("/", response_model=list[AccountRead])
+def list_accounts(db: Session = Depends(get_db)):
+    return db.query(Account).order_by(Account.id).all()
+
+@router.get("/{user_id}", response_model=AccountRead)
+def get_account(user_id: int, db: Session = Depends(get_db)):
+    return _get_account_or_404(db, user_id)
+
+# --- UPDATED PATCH to accept JSON body OR query params ---
+@router.patch("/{user_id}", response_model=AccountRead)
+def update_account(
+    user_id: int,
+    # optional JSON body
+    payload: AccountUpdate | None = Body(default=None),
+    # optional query params (for tests or curl convenience)
+    email: EmailStr | None = Query(default=None),
+    full_name: str | None = Query(default=None),
+    db: Session = Depends(get_db),
+):
+    obj = _get_account_or_404(db, user_id)
+
+    # unify sources: prefer JSON body if provided, else query params
+    effective = payload or AccountUpdate(email=email, full_name=full_name)
+
+    # nothing to update?
+    if effective.email is None and effective.full_name is None:
+        raise HTTPException(status_code=422, detail="no fields provided to update")
+
+    if effective.email is not None:
+        exists = db.query(Account).filter(Account.email == effective.email, Account.id != user_id).first()
+        if exists:
+            raise HTTPException(status_code=409, detail="email already exists")
+        obj.email = effective.email
+
+    if effective.full_name is not None:
+        obj.full_name = effective.full_name
+
+    db.add(obj); db.commit(); db.refresh(obj)
+    return obj
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(user_id: int, repo=Depends(get_repo)):
-    if not DeleteUser(repo)(user_id):
-        raise HTTPException(404, "User not found")
+def delete_account(user_id: int, db: Session = Depends(get_db)):
+    obj = _get_account_or_404(db, user_id)
+    db.delete(obj); db.commit()
     return None
