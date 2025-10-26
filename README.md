@@ -103,19 +103,20 @@ Add an interactive, data-driven dashboard for energy insights.
 ---
 
 ### 🧩 1️⃣ Clone the repository
-```powershell
+
 git clone https://github.com/walter-telsnig/smart-energy-dashboard.git
 cd smart-energy-dashboard
 
-🪶 2️⃣ Create and activate the virtual environment
+### 🪶 2️⃣ Create and activate the virtual environment
+
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 
-📦 3️⃣ Install dependencies
+### 📦 3️⃣ Install dependencies
 pip install -U pip
 pip install -r requirements.txt
 
-⚙️ 4️⃣ Configure environment
+### ⚙️ 4️⃣ Configure environment
 Create a .env file (or copy from .env.example) with:
 
 SED_DB_URL=sqlite:///./dev.db
@@ -124,7 +125,7 @@ API_BASE=http://localhost:8000/api/v1
 💡 SQLite is used for local development.
 Later milestones (M3 +) switch to Postgres via Docker Compose.
 
-🚀 5️⃣ Run the API
+### 🚀 5️⃣ Run the API
 python -m uvicorn app.main:create_app --factory --reload --port 8000
 
 Check:
@@ -133,17 +134,17 @@ Check:
 📘 Docs: http://localhost:8000/docs
 
 
-💡 6️⃣ Run the Streamlit UI
+### 💡 6️⃣ Run the Streamlit UI
 .venv\Scripts\activate
 streamlit run ui/app.py
 
 🌐 UI available at: http://localhost:8501
 
-🧪 7️⃣ Run tests
+### 🧪 7️⃣ Run tests
 pytest -q
 ✅ Expected: 5 passed in X.XXs
 
-🧭 8️⃣ Run via VS Code
+### 🧭 8️⃣ Run via VS Code
 
 Start either service with F5 using the predefined launch configurations:
 
@@ -151,7 +152,7 @@ Start either service with F5 using the predefined launch configurations:
 
 ▶️ UI (Streamlit)
 
-🧰 9️⃣ ( Optional ) Run via Docker Compose
+### 🧰 9️⃣ ( Optional ) Run via Docker Compose
 docker compose up
 
 Services:
@@ -160,7 +161,7 @@ Services:
 📊 UI → http://localhost:8501
 
 
-🧱 Folder Overview
+### 🧱 Folder Overview
 app/        FastAPI routers & app entrypoint
 modules/    Domain logic (e.g., accounts model)
 infra/      Database engine/session, CSV data, migrations
@@ -169,13 +170,15 @@ ui/         Streamlit demo (read-only dashboard)
 tests/      Unit + integration tests
 docs/       Architecture notes & ADRs
 
-🔁 Staying up to date
+### 🔁 Staying up to date
 git pull origin main
 
 And after you changed something:
 git add .
 git commit -m "feat: <your message>"
 git push
+
+### Docker Tutorial (Sabrina)
 ______________________________________________________________________________________
 Tutorial Docker Postgres (there are just informations about Postgres in Docker): https://www.datacamp.com/tutorial/postgresql-docker
 
