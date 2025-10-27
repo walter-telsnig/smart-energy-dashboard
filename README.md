@@ -104,16 +104,16 @@ Add an interactive, data-driven dashboard for energy insights.
 
 ### 🧩 1️⃣ Clone the repository
 
-git clone https://github.com/walter-telsnig/smart-energy-dashboard.git
+git clone https://github.com/walter-telsnig/smart-energy-dashboard.git \
 cd smart-energy-dashboard
 
 ### 🪶 2️⃣ Create and activate the virtual environment
 
-python -m venv .venv
+python -m venv .venv \
 .venv\Scripts\Activate.ps1
 
 ### 📦 3️⃣ Install dependencies
-pip install -U pip
+pip install -U pip \
 pip install -r requirements.txt
 
 ### ⚙️ 4️⃣ Configure environment
@@ -135,7 +135,7 @@ Check:
 
 
 ### 💡 6️⃣ Run the Streamlit UI
-.venv\Scripts\activate
+.venv\Scripts\activate \
 streamlit run ui/app.py
 
 🌐 UI available at: http://localhost:8501
