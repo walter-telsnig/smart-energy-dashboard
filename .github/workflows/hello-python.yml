@@ -1,0 +1,17 @@
+name: Hello Python
+
+on: [push]
+
+jobs:
+  python-hello:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Print Python version and Hello World
+        run: |
+          python --version
+          python -c "print('🐍 Hello from Python in GitHub Actions!')"
