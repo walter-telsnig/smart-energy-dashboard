@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List
 
 # SRP: Domain type for PV series returned by the app layer
 @dataclass(frozen=True)

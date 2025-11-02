@@ -50,7 +50,9 @@ def create_account(payload: AccountCreate, db: Session = Depends(get_db)):
     if exists:
         raise HTTPException(status_code=409, detail="email already exists")
     obj = Account(email=payload.email, full_name=payload.full_name)
-    db.add(obj); db.commit(); db.refresh(obj)
+    db.add(obj)
+    db.commit() 
+    db.refresh(obj)
     return obj
 
 @router.get("/", response_model=list[AccountRead])
@@ -90,11 +92,14 @@ def update_account(
     if effective.full_name is not None:
         obj.full_name = effective.full_name
 
-    db.add(obj); db.commit(); db.refresh(obj)
+    db.add(obj)
+    db.commit()
+    db.refresh(obj)
     return obj
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_account(user_id: int, db: Session = Depends(get_db)):
     obj = _get_account_or_404(db, user_id)
-    db.delete(obj); db.commit()
+    db.delete(obj)
+    db.commit()
     return None
