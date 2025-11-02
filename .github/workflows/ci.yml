@@ -35,7 +35,7 @@ jobs:
       - name: Test (Pytest)
         run: pytest -q
 
-      # Optional sanity check for Dockerfile (remove if you don't need it yet)
-      - name: Docker build
-        if: success()
+      # Optional sanity check for Dockerfile (optional Docker file)
+      - name: Test Docker build
+        if: success() && hashFiles('Dockerfile') != ''
         run: docker build -t smart-energy-dashboard .
