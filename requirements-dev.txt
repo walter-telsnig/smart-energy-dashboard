@@ -1,0 +1,6 @@
+# Development dependencies (for linting, typing, and testing so Github Actions can run them)
+mypy
+pandas-stubs
+types-requests
+pytest
+ruff
