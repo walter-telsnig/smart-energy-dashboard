@@ -1,0 +1,38 @@
+name: Smart Energy Dashboard CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest ruff mypy
+
+      - name: Run linting (Ruff)
+        run: ruff check .
+
+      - name: Run type checking (MyPy)
+        run: mypy .
+
+      - name: Run tests (Pytest)
+        run: pytest -q
+
+      # Optional: build Docker image to ensure Dockerfile works
+      - name: Test Docker build
+        run: docker build -t smart-energy-dashboard .
+        if: success()  # Only run if all previous steps succeeded
