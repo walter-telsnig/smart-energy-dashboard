@@ -17,7 +17,8 @@ class FakeRepo(UserRepositoryPort):
     def list(self, limit=100, offset=0): return list(self._d.values())[offset:offset+limit]
     def update_name(self, user_id: int, full_name: str):
         u = self._d.get(user_id)
-        if not u: return None
+        if not u:
+            return None
         u = User(u.id, u.email, full_name, u.is_active, u.created_at)
         self._d[user_id] = u
         return u
