@@ -1,6 +1,7 @@
 ⚡⚡⚡ Smart Energy Dashboard — Roadmap & Architecture Overview⚡⚡⚡
 
-[![Smart Energy Dashboard CI](https://github.com/walter-telsnig/smart-energy-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/walter-telsnig/smart-energy-dashboard/actions/workflows/ci.yml)
+[![Smart Energy Dashboard CI](https://github.com/walter-telsnig/smart-energy-dashboard/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/walter-telsnig/smart-energy-dashboard/actions/workflows/ci.yml?query=branch%3Amain)
+
 [![Hello Python](https://github.com/walter-telsnig/smart-energy-dashboard/actions/workflows/hello-python.yml/badge.svg)](https://github.com/walter-telsnig/smart-energy-dashboard/actions/workflows/hello-python.yml)
 
 This project follows a **monolithic (modular monolith)** architecture built in Python 3.13 with FastAPI, SQLAlchemy, Alembic, and Docker.  
