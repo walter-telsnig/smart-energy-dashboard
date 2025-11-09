@@ -18,7 +18,7 @@ from typing import List, Tuple
 st.set_page_config(layout="wide")
 st.title("🩺 Health Check")
 
-# --- Filesystem checks ---
+# --- Filesystem checks (use Path objects here) ---
 st.subheader("Folders")
 rows: List[Tuple[str, str, str]] = []
 for label, p in {
@@ -29,12 +29,14 @@ for label, p in {
     rows.append((label, str(p), "✅" if p.exists() else "❌"))
 st.table(pd.DataFrame(rows, columns=["Name", "Path", "Exists"]))
 
+# --- CSV readability inputs (MUST be str, not Path) ---
 st.subheader("CSV Readability (optional)")
 pv_csv: str = st.text_input("PV CSV", "infra/data/pv/pv_2025_hourly.csv")
 price_csv: str = st.text_input("Price CSV", "infra/data/market/price_2025_hourly.csv")
 cons_csv: str = st.text_input("Consumption CSV", "infra/data/consumption/consumption_2025_hourly.csv")
 
 def try_read(path: str, n: int = 3) -> Tuple[str, str, str]:
+    """Return (ok, path, info) where ok is '✅' or '❌'."""
     try:
         df = pd.read_csv(path, nrows=n)
         return ("✅", path, f"Columns: {list(df.columns)}")
@@ -42,8 +44,8 @@ def try_read(path: str, n: int = 3) -> Tuple[str, str, str]:
         return ("❌", path, str(e))
 
 if st.button("Test CSVs"):
-    for label, p in [("PV", pv_csv), ("Price", price_csv), ("Consumption", cons_csv)]:
-        ok, path_info, info = try_read(p)
+    for label, pth in [("PV", pv_csv), ("Price", price_csv), ("Consumption", cons_csv)]:
+        ok, path_info, info = try_read(pth)
         st.write(f"{ok} {label}: {path_info}")
         st.caption(info)
 
