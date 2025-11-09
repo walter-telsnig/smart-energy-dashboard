@@ -5,7 +5,7 @@ Pydantic request/response contracts for the Battery API.
 Design principles:
 - OCP: new fields can be added without breaking existing handlers.
 - ADP: Keep web schema separate from domain to avoid cyclic deps.
-- Mypy-friendly defaults (use default_factory with a callable).
+- Mypy-friendly defaults.
 """
 
 from __future__ import annotations
@@ -21,13 +21,23 @@ class BatteryParamsIn(BaseModel):
     p_charge_max_kw: float = Field(5.0, ge=0.0)
     p_discharge_max_kw: float = Field(5.0, ge=0.0)
 
+def _default_params() -> BatteryParamsIn:
+    # Explicit named args keep mypy happy
+    return BatteryParamsIn(
+        capacity_kwh=10.0,
+        soc_min=0.05,
+        soc_max=0.95,
+        eta_c=0.95,
+        eta_d=0.95,
+        p_charge_max_kw=5.0,
+        p_discharge_max_kw=5.0,
+    )
+
 class BatterySimRequest(BaseModel):
     """Simulation request for a date range. Assumes hourly resolution."""
     start: str = Field(..., description="Inclusive ISO-8601 start, e.g. 2025-01-01T00:00:00Z")
     end: str = Field(..., description="Exclusive ISO-8601 end, e.g. 2025-01-08T00:00:00Z")
-    # Callable default factory keeps mypy & pydantic happy
-    params: BatteryParamsIn = Field(default_factory=lambda: BatteryParamsIn())
-    # Optional overrides: file locations (keep decoupled from domain)
+    params: BatteryParamsIn = Field(default_factory=_default_params)
     pv_csv: Optional[str] = Field(None, description="Path to PV csv with columns [datetime, production_*]")
     consumption_csv: Optional[str] = Field(None, description="Path to consumption csv [datetime, consumption_kwh]")
 
@@ -59,5 +69,4 @@ class BatteryCostResponse(BaseModel):
     total_import_cost_eur: float
     total_export_revenue_eur: float
     total_net_cost_eur: float
-    # optional daily breakdown for charts
     daily_breakdown: List[BatteryCostPoint]

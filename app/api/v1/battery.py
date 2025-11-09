@@ -42,7 +42,6 @@ DEFAULT_PRICE_PATH = os.getenv("PRICE_CSV_PATH", "infra/data/market/price_2025_h
 
 @router.get("/defaults", response_model=BatteryParamsIn)
 def get_defaults() -> BatteryParamsIn:
-    # Build explicitly to satisfy mypy/pydantic typing
     return BatteryParamsIn(
         capacity_kwh=10.0,
         soc_min=0.05,
@@ -76,10 +75,12 @@ def post_simulate(req: BatterySimRequest) -> BatterySimResponse:
     ts = _load_series(pv_csv, cons_csv, req.start, req.end)
     res = simulate(p, ts)
 
+    # Convert index to a concrete DatetimeIndex to satisfy mypy
+    dt_index: pd.DatetimeIndex = pd.to_datetime(res.index)
     points: list[BatteryPoint] = []
-    for idx, row in res.iterrows():
-        # Ensure a proper ISO string regardless of index typing
-        ts_iso = pd.Timestamp(idx).to_pydatetime().isoformat()
+    for i, ts_item in enumerate(dt_index):
+        ts_iso = ts_item.to_pydatetime().isoformat()
+        row = res.iloc[i]
         points.append(
             BatteryPoint(
                 datetime=ts_iso,
@@ -126,16 +127,20 @@ def post_cost_summary(req: BatteryCostRequest) -> BatteryCostResponse:
     total_export = float(df["export_revenue_eur"].sum())
     total_net = float(df["net_cost_eur"].sum())
 
+    # Daily breakdown using a concrete DatetimeIndex
     daily = df.resample("D").sum(numeric_only=True)
-    points = [
-        BatteryCostPoint(
-            datetime=pd.Timestamp(idx).to_pydatetime().isoformat(),
-            import_cost_eur=float(row.get("import_cost_eur", 0.0)),
-            export_revenue_eur=float(row.get("export_revenue_eur", 0.0)),
-            net_cost_eur=float(row.get("net_cost_eur", 0.0)),
+    daily_index: pd.DatetimeIndex = pd.DatetimeIndex(daily.index)
+    points: list[BatteryCostPoint] = []
+    for i, ts_item in enumerate(daily_index):
+        row = daily.iloc[i]
+        points.append(
+            BatteryCostPoint(
+                datetime=ts_item.to_pydatetime().isoformat(),
+                import_cost_eur=float(row.get("import_cost_eur", 0.0)),
+                export_revenue_eur=float(row.get("export_revenue_eur", 0.0)),
+                net_cost_eur=float(row.get("net_cost_eur", 0.0)),
+            )
         )
-        for idx, row in daily.iterrows()
-    ]
 
     return BatteryCostResponse(
         total_import_cost_eur=total_import,
