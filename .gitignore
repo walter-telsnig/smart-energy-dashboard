@@ -16,3 +16,8 @@ Thumbs.db
 # Local DBs (optional)
 *.sqlite3
 *.db
+
+# Developer scratch files
+*_old.py
+*_tmp.py
+*.bak
