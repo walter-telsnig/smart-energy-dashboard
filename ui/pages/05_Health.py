@@ -55,7 +55,7 @@ def ping(path: str) -> tuple[str, str]:
     try:
         r = requests.get(url, timeout=5) if path.endswith("/defaults") else requests.get(url, timeout=5)
         if r.status_code == 200:
-            return ("✅", f"200 OK")
+            return ("✅", "200 OK")
         return ("❌", f"{r.status_code} {r.text[:120]}")
     except Exception as e:
         return ("❌", str(e))
