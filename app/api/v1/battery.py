@@ -18,10 +18,10 @@ TODOs:
 """
 from __future__ import annotations
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import List
+#from pydantic import BaseModel
+#from typing import List
 import os
-import pandas as pd
+#import pandas as pd
 
 from modules.battery.domain import BatteryParams
 from modules.battery.schemas import (
