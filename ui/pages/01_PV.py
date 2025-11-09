@@ -43,16 +43,18 @@ def load_csv(path: str) -> pd.DataFrame:
     df["datetime"] = pd.to_datetime(df["datetime"], utc=True)
 
     # Normalize value column (prefer energy kWh; convert kW->kWh for hourly)
+    value_col: str
     if "production_kwh" in df.columns:
         value_col = "production_kwh"
     elif "production_kw" in df.columns:
         df["production_kwh"] = pd.to_numeric(df["production_kw"], errors="coerce").astype("float64") * 1.0
         value_col = "production_kwh"
     else:
-        # Fallback to next column if present
-        value_col = df.columns[1] if len(df.columns) > 1 else None
-        if value_col is None:
+        if len(df.columns) <= 1:
             raise KeyError(f"Could not detect PV value column in '{path}'. Columns: {list(df.columns)}")
+        # fall back to the second column but enforce str typing
+        fallback = str(df.columns[1])
+        value_col = fallback
 
     return (
         df[["datetime", value_col]]

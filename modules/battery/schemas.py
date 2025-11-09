@@ -5,7 +5,7 @@ Pydantic request/response contracts for the Battery API.
 Design principles:
 - OCP: new fields can be added without breaking existing handlers.
 - ADP: Keep web schema separate from domain to avoid cyclic deps.
-- Mypy-friendly defaults (avoid default_factory issues).
+- Mypy-friendly defaults (use default_factory with a callable).
 """
 
 from __future__ import annotations
@@ -25,8 +25,8 @@ class BatterySimRequest(BaseModel):
     """Simulation request for a date range. Assumes hourly resolution."""
     start: str = Field(..., description="Inclusive ISO-8601 start, e.g. 2025-01-01T00:00:00Z")
     end: str = Field(..., description="Exclusive ISO-8601 end, e.g. 2025-01-08T00:00:00Z")
-    # Use a concrete default instance to satisfy mypy & pydantic
-    params: BatteryParamsIn = Field(default=BatteryParamsIn())
+    # Callable default factory keeps mypy & pydantic happy
+    params: BatteryParamsIn = Field(default_factory=lambda: BatteryParamsIn())
     # Optional overrides: file locations (keep decoupled from domain)
     pv_csv: Optional[str] = Field(None, description="Path to PV csv with columns [datetime, production_*]")
     consumption_csv: Optional[str] = Field(None, description="Path to consumption csv [datetime, consumption_kwh]")
