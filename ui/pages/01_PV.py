@@ -12,6 +12,7 @@ import streamlit as st
 import pandas as pd
 from pathlib import Path
 import requests
+from typing import List, Tuple
 
 st.set_page_config(layout="wide")
 st.title("☀️ PV Production")
@@ -33,9 +34,26 @@ api_base = st.text_input("API base", value="http://localhost:8000", disabled=not
 @st.cache_data(show_spinner=False)
 def load_csv(path: str) -> pd.DataFrame:
     df = pd.read_csv(path)
+    # Normalize time column
+    if "datetime" not in df.columns:
+        if "timestamp" in df.columns:
+            df = df.rename(columns={"timestamp": "datetime"})
+        else:
+            raise KeyError(f"CSV '{path}' must have a 'datetime' column. Columns: {list(df.columns)}")
     df["datetime"] = pd.to_datetime(df["datetime"], utc=True)
-    # normalize column name
-    value_col = "production_kwh" if "production_kwh" in df.columns else df.columns[1]
+
+    # Normalize value column (prefer energy kWh; convert kW->kWh for hourly)
+    if "production_kwh" in df.columns:
+        value_col = "production_kwh"
+    elif "production_kw" in df.columns:
+        df["production_kwh"] = pd.to_numeric(df["production_kw"], errors="coerce").astype("float64") * 1.0
+        value_col = "production_kwh"
+    else:
+        # Fallback to next column if present
+        value_col = df.columns[1] if len(df.columns) > 1 else None
+        if value_col is None:
+            raise KeyError(f"Could not detect PV value column in '{path}'. Columns: {list(df.columns)}")
+
     return (
         df[["datetime", value_col]]
         .set_index("datetime")
@@ -44,7 +62,7 @@ def load_csv(path: str) -> pd.DataFrame:
     )
 
 @st.cache_data(show_spinner=True)
-def pv_catalog_api(base: str) -> list[str]:
+def pv_catalog_api(base: str) -> List[str]:
     """
     Parse catalog of the form:
       {"items":[{"key":"pv_2025_hourly","filename":"pv_2025_hourly.csv", ...}, ...]}
@@ -74,7 +92,9 @@ def pv_head_api(base: str, key: str, n: int) -> pd.DataFrame:
     if not key:
         raise ValueError("No PV series key selected.")
     url = f"{base}/api/v1/pv/head"
-    r = requests.get(url, params={"key": key, "n": n}, timeout=15)
+    # Use a typed list of tuples to please mypy/requests typing
+    params: List[Tuple[str, str]] = [("key", key), ("n", str(int(n)))]
+    r = requests.get(url, params=params, timeout=15)
     r.raise_for_status()
     data = r.json()
     rows = data.get("rows", data)
@@ -88,19 +108,16 @@ def pv_head_api(base: str, key: str, n: int) -> pd.DataFrame:
     else:
         raise KeyError(f"API response missing 'timestamp'/'datetime' field: {df.columns.tolist()}")
 
-    # Accept 'value' or 'production_kwh'
+    # Accept 'value' or 'production_kwh' or convert 'production_kw' -> kWh
     if "value" in df.columns:
         val_col = "value"
     elif "production_kwh" in df.columns:
         val_col = "production_kwh"
+    elif "production_kw" in df.columns:
+        df["production_kwh"] = pd.to_numeric(df["production_kw"], errors="coerce").astype("float64") * 1.0
+        val_col = "production_kwh"
     else:
-        # Also tolerate PV power 'production_kw' (convert to kWh since hourly)
-        if "production_kw" in df.columns:
-            val_col = "production_kw"
-            df["production_kwh"] = df["production_kw"].astype("float64") * 1.0
-            val_col = "production_kwh"
-        else:
-            raise KeyError(f"API response missing 'value'/'production_kwh' field: {df.columns.tolist()}")
+        raise KeyError(f"API response missing 'value'/'production_kwh' field: {df.columns.tolist()}")
 
     df[ts_col] = pd.to_datetime(df[ts_col], utc=True)
     df = df.rename(columns={ts_col: "datetime", val_col: "production_kwh"})
@@ -117,7 +134,6 @@ if use_api:
         if "pv_key" not in st.session_state:
             st.session_state.pv_key = series[0]
 
-        # Ensure index exists (avoid ValueError if previous selection vanished)
         default_idx = series.index(st.session_state.pv_key) if st.session_state.pv_key in series else 0
         st.session_state.pv_key = st.selectbox("Select PV series (API)", options=series, index=default_idx)
 

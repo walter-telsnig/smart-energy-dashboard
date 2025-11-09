@@ -3,10 +3,12 @@
 Battery service orchestrates a greedy charge/discharge simulation for a single stream
 of (PV, consumption) at hourly resolution.
 
-Accepts PV column aliases including 'production_kw' and converts to kWh (hourly).
+- mypy-friendly vectorized assignment (avoid df.at[...] inside loop)
+- Accepts PV column aliases incl. 'production_kw' and converts to kWh (hourly).
 """
 
 from __future__ import annotations
+from typing import List
 import pandas as pd
 from .domain import BatteryParams
 
@@ -58,12 +60,17 @@ def simulate(params: BatteryParams, timeseries: pd.DataFrame) -> pd.DataFrame:
     with columns ['production_kwh','consumption_kwh'] and UTC index.
     """
     df = timeseries.copy()
-    for col in ["soc_kwh","charge_kwh","discharge_kwh","grid_import_kwh","grid_export_kwh"]:
-        df[col] = 0.0
+
+    # Prepare storage for mypy-friendly, vectorized assignment after loop after build-and-test error
+    socs: List[float] = []
+    charges: List[float] = []
+    discharges: List[float] = []
+    g_imports: List[float] = []
+    g_exports: List[float] = []
 
     soc = params.capacity_kwh * params.soc_min  # start at minimum
 
-    for ts, row in df.iterrows():
+    for _, row in df.iterrows():
         pv = float(row["production_kwh"])
         load = float(row["consumption_kwh"])
         surplus = pv - load
@@ -89,12 +96,18 @@ def simulate(params: BatteryParams, timeseries: pd.DataFrame) -> pd.DataFrame:
 
         soc = params.clamp_soc(soc)
 
-        df.at[ts, "soc_kwh"] = soc
-        df.at[ts, "charge_kwh"] = round(charge, 6)
-        df.at[ts, "discharge_kwh"] = round(discharge, 6)
-        df.at[ts, "grid_import_kwh"] = round(g_import, 6)
-        df.at[ts, "grid_export_kwh"] = round(g_export, 6)
+        socs.append(soc)
+        charges.append(round(charge, 6))
+        discharges.append(round(discharge, 6))
+        g_imports.append(round(g_import, 6))
+        g_exports.append(round(g_export, 6))
 
+    df = df.copy()
+    df["soc_kwh"] = socs
+    df["charge_kwh"] = charges
+    df["discharge_kwh"] = discharges
+    df["grid_import_kwh"] = g_imports
+    df["grid_export_kwh"] = g_exports
     return df
 
 def load_price(price_csv: str, start: str, end: str) -> pd.Series:
@@ -103,10 +116,15 @@ def load_price(price_csv: str, start: str, end: str) -> pd.Series:
     df = pd.read_csv(price_csv)
     ts = pd.to_datetime(df["datetime"], utc=True)
     s = pd.Series(df["price_eur_mwh"].values, index=ts)
-    s = s.reindex(idx).interpolate(limit_direction="both")
+    s = s.reindex(idx).ffill().bfill()  # mypy-friendly
     return s
 
-def compute_costs(sim: pd.DataFrame, price: pd.Series, export_mode: str = "feed_in", feed_in_tariff_eur_per_kwh: float = 0.08) -> pd.DataFrame:
+def compute_costs(
+    sim: pd.DataFrame,
+    price: pd.Series,
+    export_mode: str = "feed_in",
+    feed_in_tariff_eur_per_kwh: float = 0.08,
+) -> pd.DataFrame:
     """
     Attach cost columns to a simulation frame.
     - import_cost_eur = grid_import_kwh * (price_eur_mwh / 1000)
@@ -114,7 +132,7 @@ def compute_costs(sim: pd.DataFrame, price: pd.Series, export_mode: str = "feed_
                            else grid_export_kwh * feed_in_tariff_eur_per_kwh
     - net_cost_eur = import_cost_eur - export_revenue_eur
     """
-    df = sim.join(price.rename("price_eur_mwh"), how="left").fillna(method="ffill").fillna(method="bfill")
+    df = sim.join(price.rename("price_eur_mwh"), how="left").ffill().bfill()
     df["import_cost_eur"] = df["grid_import_kwh"] * (df["price_eur_mwh"] / 1000.0)
     if export_mode == "market":
         df["export_revenue_eur"] = df["grid_export_kwh"] * (df["price_eur_mwh"] / 1000.0)
