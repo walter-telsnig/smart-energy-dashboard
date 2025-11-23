@@ -1,0 +1,71 @@
+Wie lautet die Definition von Softwarearchitektur nach Garlan & Perry (TSE 1995)?,"Die Struktur der Komponenten eines Programms/Systems, ihre Wechselbeziehungen sowie die Prinzipien und Richtlinien, die ihren Entwurf und ihre Entwicklung im Laufe der Zeit bestimmen."
+Wie definiert Philippe Kruchten (IEEE Software 1995) Softwarearchitektur?,"Softwarearchitektur befasst sich mit Abstraktion, mit Dekomposition und Komposition, mit Stil und Ästhetik."
+Was besagt die Definition von Softwarearchitektur nach IEEE 1471?,"Die grundlegende Organisation eines Systems, verkörpert in seinen Komponenten, ihren Beziehungen zueinander und zur Umgebung sowie den Prinzipien, die seinen Entwurf und seine Entwicklung leiten."
+Welche zwei grundlegenden Aspekte eines Systems beschreibt eine Architektur?,Statische Aspekte (Konstruktionsplan/Blueprint) und dynamische Aspekte (Betriebsplan).
+Welche Rolle spielen architektonische Entscheidungen bei der Softwarearchitektur?,"Es sind in der Regel high-level Entscheidungen mit großer Auswirkung, die schwer zu ändern sind und die Implementierungsdetails vorantreiben."
+"Welche Funktion hat die Softwarearchitektur als ""Brücke""?","Sie unterstützt den Übergang von der Problemanalyse zur technischen Implementierung, also zwischen der Domäne und der Systemimplementierung."
+"Warum ist es wichtig, dass Softwarearchitektur Systeme aus verschiedenen Perspektiven zeigt?","Weil verschiedene Stakeholder (z.B. Management, neue Mitarbeiter, Wartung, Betrieb) unterschiedliche Interessen und Sichten auf das System haben."
+"In der Wertematrix von Philippe Kruchten, was repräsentieren die unsichtbaren, positiven Werte?",Architektonische und strukturelle Merkmale.
+Was ist der Hauptunterschied in der Rolle des Softwarearchitekten zwischen dem klassischen und dem agilen Modell?,"Im klassischen Modell ist eine dedizierte Person verantwortlich, während im agilen Modell alle Teammitglieder gemeinsam die Verantwortung tragen."
+Nennen Sie drei zentrale Aufgaben eines Softwarearchitekten.,"Zu den Aufgaben gehören z.B. Konstruktion und Design, Treffen von Entscheidungen und Sicherstellung, dass Anforderungen erfüllt werden."
+Welchem Zweck dient das 4+1 View Model von Kruchten?,"Es dient der Beschreibung einer Softwarearchitektur aus vier konkurrierenden Sichten plus einer verbindenden Sicht (Szenarien), um die Interessen verschiedener Stakeholder zu adressieren."
+Welchen Aspekt des Systems beschreibt die 'Logical View' im 4+1 Modell?,"Sie beschreibt die funktionalen Anforderungen und die objektorientierte Dekomposition des Systems, also was das System den Benutzern zur Verfügung stellt."
+Womit befasst sich die 'Process View' im 4+1 Modell?,"Sie befasst sich mit den dynamischen Aspekten des Systems wie Performance und Verfügbarkeit und zeigt, wie das System zur Laufzeit abläuft."
+Was ist der Fokus der 'Development View' im 4+1 Modell?,"Der Fokus liegt auf der Organisation der Module aus Programmierersicht, also wie der Code organisiert ist (Subsystem-Dekomposition)."
+Was zeigt die 'Physical View' im 4+1 Modell?,"Sie zeigt das Mapping der Software auf die Hardware, also die Topologie der Komponenten aus der Sicht eines Systemingenieurs."
+"Welche Funktion hat die '+1'-Sicht, die 'Scenarios View', im 4+1 Modell?","Sie dient dazu, die anderen vier Sichten zu verbinden und zu validieren, indem sie wichtige Interaktionen zwischen Objekten und Prozessen beschreibt."
+Welches Hauptziel verfolgen die SOLID-Designprinzipien?,"Das Ziel ist die Schaffung von Strukturen, die Änderungen tolerieren, leicht verständlich sind und wiederverwendbare Komponenten ermöglichen."
+Was besagt das Single Responsibility Principle (SRP)?,"Ein Modul sollte gegenüber einem, und nur einem, Akteur verantwortlich sein (d.h. nur einen Grund zur Änderung haben)."
+"Im Kontext des SRP, was ist ein 'Akteur'?","Ein Akteur ist eine Person oder eine Gruppe von Personen, die eine Änderung am Modul anfordern."
+Welche zwei Symptome deuten auf eine Verletzung des SRP hin?,"Zufällige Duplizierung (Accidental Duplication) und Zusammenführungen (Merge), bei denen Änderungen für einen Akteur andere Akteure unbeabsichtigt beeinflussen."
+Was besagt das Open-Closed Principle (OCP)?,"Ein Software-Artefakt sollte offen für Erweiterungen, aber geschlossen für Modifikationen sein."
+Wie erreicht man das OCP in der Softwarearchitektur?,"Durch die Organisation von Komponentensabhängigkeiten in einer Hierarchie, sodass Änderungen an niedrigstufigen Komponenten keine Änderungen an hochstufigen Komponenten erfordern."
+Was besagt das Liskov Substitution Principle (LSP)?,"Subtypen müssen durch ihre Basistypen ersetzbar sein, ohne das korrekte Verhalten des Programms zu verändern."
+"Warum verletzt eine 'Square'-Klasse, die von einer 'Rectangle'-Klasse erbt, oft das LSP?","Weil eine Annahme über Rechtecke (Breite und Höhe können unabhängig voneinander geändert werden) für Quadrate nicht gilt, was zu unerwartetem Verhalten führt."
+Was besagt das Interface Segregation Principle (ISP)?,"Kein Client sollte gezwungen sein, von Interfaces abhängig zu sein, die er nicht verwendet."
+"Wie löst man eine ISP-Verletzung, bei der eine Klasse ein großes Interface mit vielen Methoden implementiert?","Man teilt das große Interface in mehrere kleinere, spezifischere Interfaces auf, die auf die Bedürfnisse der einzelnen Clients zugeschnitten sind."
+Was ist die Kernaussage des Dependency Inversion Principle (DIP)?,"Code sollte von Abstraktionen abhängen, nicht von Konkretionen."
+Warum sind Abhängigkeiten von 'volatilen' Konkretionen laut DIP kritisch?,Weil sich diese Konkretionen (z.B. Klassen in aktiver Entwicklung) häufig ändern und somit häufige Änderungen im abhängigen Code erzwingen.
+"Welches Entwurfsmuster wird häufig verwendet, um die Erzeugung konkreter Objekte zu isolieren und so das DIP zu wahren?",Das (Abstract) Factory Pattern.
+Was ist ein Software-Komponent nach der Definition von Robert C. Martin?,Eine Einheit der Bereitstellung (a unit of deployment).
+"Die drei Prinzipien der Komponenten-Kohäsion sind REP, CCP und _____.",CRP (Common Reuse Principle)
+Was besagt das Reuse/Release Equivalence Principle (REP)?,Die Granularität der Wiederverwendung ist die Granularität der Freigabe (The granule of reuse is the granule of release).
+Was besagt das Common Closure Principle (CCP)?,"Sammle Klassen in Komponenten, die sich aus denselben Gründen und zur selben Zeit ändern."
+Das Common Closure Principle (CCP) ist die Anwendung des _____ auf Komponentenebene.,Single Responsibility Principle (SRP)
+Was fordert das Common Reuse Principle (CRP)?,"Zwinge Benutzer einer Komponente nicht, von Dingen abzuhängen, die sie nicht benötigen."
+Wie äußert sich die 'Spannung' zwischen den Prinzipien der Komponenten-Kohäsion?,"REP und CCP tendieren dazu, Komponenten größer zu machen, während CRP dazu tendiert, sie kleiner zu machen."
+"Die drei Prinzipien der Komponenten-Kopplung sind ADP, SDP und _____.",SAP (Stable Abstractions Principle)
+Was besagt das Acyclic Dependencies Principle (ADP)?,Im Abhängigkeitsgraphen der Komponenten sind keine Zyklen erlaubt.
+Welches Problem beschreibt das 'Morning After Syndrome' im Kontext von Komponentensabhängigkeiten?,"Ein Entwickler checkt seine Änderungen ein und am nächsten Morgen funktioniert das System nicht mehr, weil jemand anderes eine Komponente geändert hat, von der er abhängt."
+Was besagt das Stable Dependencies Principle (SDP)?,Abhängigkeiten sollten in Richtung der Stabilität verlaufen.
+Wie wird die Instabilität (I) einer Komponente berechnet?,"I = Fan-out / (Fan-in + Fan-out), wobei Fan-in die eingehenden und Fan-out die ausgehenden Abhängigkeiten sind."
+"Ein Instabilitätswert von I=0 bedeutet, dass eine Komponente maximal _____ ist.",stabil
+"Ein Instabilitätswert von I=1 bedeutet, dass eine Komponente maximal _____ ist.",instabil
+Was besagt das Stable Abstractions Principle (SAP)?,"Eine Komponente sollte so abstrakt sein, wie sie stabil ist."
+Wie wird die Abstraktheit (A) einer Komponente berechnet?,"A = Na / Nc, wobei Na die Anzahl der abstrakten Klassen und Nc die Gesamtzahl der Klassen in der Komponente ist."
+"Im A/I-Diagramm (Abstraktheit vs. Instabilität), was ist die 'Main Sequence'?","Die Linie, auf der Komponenten liegen, die ein gutes Gleichgewicht zwischen Stabilität und Abstraktheit aufweisen (von A=1, I=0 bis A=0, I=1)."
+Was charakterisiert Komponenten in der 'Zone of Pain' im A/I-Diagramm?,"Sie sind hochgradig stabil (I nahe 0) und hochgradig konkret (A nahe 0), was sie schwer änderbar macht."
+Was charakterisiert Komponenten in der 'Zone of Uselessness' im A/I-Diagramm?,"Sie sind hochgradig abstrakt (A nahe 1), haben aber keine Abhängigen (I nahe 1), was sie nutzlos macht."
+Was ist ein Architekturstil?,"Eine benannte Sammlung von Architekturentwurfsentscheidungen, die in einem bestimmten Kontext anwendbar sind, Designentscheidungen einschränken und vorteilhafte Eigenschaften fördern."
+Was ist das Hauptmerkmal einer geschichteten Architektur (Layered Architecture)?,"Die Funktionalität ist in Schichten gekapselt, wobei jede Schicht nur mit der direkt unter ihr liegenden Schicht kommunizieren darf."
+Nennen Sie zwei Vorteile einer geschichteten Architektur.,Die Schichten sind unabhängig voneinander und Implementierungen können ausgetauscht werden.
+Nennen Sie einen Nachteil der geschichteten Architektur.,"Die Performance kann leiden, da einfache Aktionen Aufrufe über viele Schichten erfordern können."
+Aus welchen drei Hauptkomponenten besteht das Model-View-Controller (MVC) Muster?,"Model (Daten und Geschäftslogik), View (Darstellung der Daten) und Controller (verarbeitet Benutzereingaben)."
+Was ist der Hauptvorteil des MVC-Musters?,"Die Entkopplung der Komponenten, insbesondere die Trennung von Geschäftslogik und Benutzeroberfläche."
+Was ist die Rolle eines 'Brokers' in einer nachrichtenorientierten Architektur?,Der Broker verwaltet die Warteschlangen (Queues) und die Clients und leitet die Nachrichten von den Produzenten an die Konsumenten weiter.
+Nennen Sie einen Vorteil der nachrichtenorientierten Architektur.,"Sie ermöglicht lose Kopplung und asynchrone Kommunikation, sodass Dienste offline gehen können, ohne dass Nachrichten verloren gehen."
+Was ist das Kernprinzip von REST (Representational State Transfer)?,"Es ist ein Architekturstil für verteilte Hypermedia-Systeme, der Ressourcen über eine einheitliche Schnittstelle (URIs und HTTP-Methoden) manipuliert."
+"Welches REST-Prinzip besagt, dass der Server keinen Client-Kontext zwischen den Anfragen speichert?",Zustandslosigkeit (Statelessness).
+"Welche HTTP-Methode wird typischerweise verwendet, um eine Ressource in einem REST-System zu erstellen?",POST.
+"Welche HTTP-Methode wird verwendet, um eine bestehende Ressource in einem REST-System vollständig zu ersetzen oder zu aktualisieren?",PUT.
+Was beschreibt Level 2 im Richardson Maturity Model für REST-APIs?,"Die Verwendung verschiedener URIs für Ressourcen in Kombination mit unterschiedlichen HTTP-Verben (GET, POST, PUT, DELETE) für Interaktionen."
+Wofür steht HATEOAS im Kontext von REST?,"Hypermedia as the Engine of Application State; bedeutet, dass die Antworten des Servers Links zu verwandten Aktionen und Ressourcen enthalten, um die Navigation zu ermöglichen."
+Wie lautet die Definition einer Microservice-Architektur nach Lewis und Fowler?,"Ein Ansatz zur Entwicklung einer einzelnen Anwendung als eine Suite kleiner Dienste, die jeweils in ihrem eigenen Prozess laufen und über leichtgewichtige Mechanismen kommunizieren."
+Nach welchem Prinzip sollen Microservices gemäß der 'Unix-Philosophie' gestaltet werden?,Mache eine Sache und mache sie gut (Do one thing and do it well).
+Nennen Sie einen wesentlichen Vorteil von Microservices gegenüber einem Monolithen.,"Unabhängige Bereitstellung (Independent Deployment), die schnellere Release-Zyklen ermöglicht."
+Nennen Sie einen wesentlichen Nachteil oder eine Herausforderung von Microservices.,"Die operationelle Komplexität ist höher, da es sich um ein verteiltes System handelt."
+Was besagt das Gesetz von Conway (Conway's Law)?,"Jede Organisation, die ein System entwirft, wird ein Design hervorbringen, dessen Struktur eine Kopie der Kommunikationsstruktur der Organisation ist."
+"Was bedeutet der Grundsatz 'You build it, you run it' im Kontext von Microservices?","Das Entwicklungsteam ist für den gesamten Lebenszyklus seines Dienstes verantwortlich, einschließlich Betrieb und Wartung, anstatt ihn an ein separates Team zu übergeben."
+"Was ist die Faustregel für die Größe eines Microservice-Teams, die von Jeff Bezos (Amazon) stammt?","Ein Zwei-Pizza-Team (ein Team, das mit zwei Pizzen satt wird)."
+Was ist der Hauptgrund für die 'Monolith First'-Strategie?,"Es ist anfangs einfacher, die richtigen Servicegrenzen (Bounded Contexts) innerhalb eines Monolithen zu finden und zu refaktorisieren, bevor man die Komplexität eines verteilten Systems einführt."
+Wann übertrifft die Produktivität eines Microservice-Ansatzes die eines monolithischen Ansatzes laut dem Diagramm von Martin Fowler?,"Wenn die Komplexität des Systems einen bestimmten Punkt überschreitet, an dem die abnehmende Kopplung der Microservices den Produktivitätsabfall abschwächt."
