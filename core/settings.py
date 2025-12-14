@@ -11,6 +11,7 @@ class Settings(BaseSettings):
         env_file=".env",
         env_prefix="SED_",         # e.g. SED_DB_URL
         case_sensitive=False,
+        extra="ignore",
     )
 
 settings = Settings()
