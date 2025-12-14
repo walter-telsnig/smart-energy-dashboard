@@ -16,6 +16,7 @@ Notes:
 - Pages expect CSVs in infra/data/* but can be switched to API calls where available.
 - Keep this file light; most logic lives in the pages.
 """
+# from ui.utils.overview_metrics import count_csv_files, count_csv_rows, total_pv_kwh
 from __future__ import annotations
 import streamlit as st
 from pathlib import Path
