@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Literal
+from typing import List, Literal
 
 import pandas as pd
 from fastapi import APIRouter, HTTPException, Query

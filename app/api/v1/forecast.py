@@ -10,7 +10,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Dict, List, Literal, Optional
+from typing import List, Literal
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -105,6 +105,23 @@ def _baseline_next_hours(df: pd.DataFrame, hours: int) -> pd.DataFrame:
 
 
 # ---------- endpoints -----------------------------------------------------------
+
+
+@router.get("", response_model=dict)
+def forecast_root() -> dict:
+    """
+    Forecast service root.
+    Provides a lightweight health/shape check for the forecast module.
+    """
+    return {
+        "service": "forecast",
+        "status": "ok",
+        "endpoints": [
+            "/api/v1/forecast/next",
+            "/api/v1/forecast/train",
+        ],
+    }
+
 
 @router.post("/train", response_model=TrainResponse)
 def train(req: TrainRequest) -> TrainResponse:
