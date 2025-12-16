@@ -1,0 +1,3 @@
+1. Copy csv File in Docker: docker cp <path of csv File> postgres-db:/tmp/
+2. Go to psql console: docker exec -it postgres-db psql -U postgres -d pv-db
+3. Copy data in table: \copy table (column1, column2, ...) FROM '/tmp/csv-file' WITH (FORMAT csv, HEADER true, DELIMITER ',');
