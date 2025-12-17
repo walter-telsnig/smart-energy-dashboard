@@ -1,9 +1,3 @@
-# Timeseries use-cases for the Smart Energy Dashboard.
-# - Pure logic: load PV + consumption + price (+ weather) CSVs, merge, normalize units
-# - Provides time-window slicing for "today" + horizon scenarios
-#
-# No FastAPI imports here.
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -37,16 +31,6 @@ def _read_csv(path: Path) -> pd.DataFrame:
 
 
 def load_merged_history(years: Iterable[int] = (2025, 2026, 2027)) -> pd.DataFrame:
-    """
-    Load all available PV + consumption + price (+ weather) data across provided years
-    and return a single merged, normalized DataFrame:
-
-      datetime, pv_kwh, load_kwh, price_eur_kwh, temp_c, cloud_cover_pct
-
-    Weather is optional:
-      - if weather CSVs exist, merge them on datetime (inner)
-      - if missing, keep columns but fill as NA
-    """
     frames: list[pd.DataFrame] = []
 
     for year in years:
@@ -62,7 +46,6 @@ def load_merged_history(years: Iterable[int] = (2025, 2026, 2027)) -> pd.DataFra
         cons = _read_csv(cons_path)
         price = _read_csv(price_path)
 
-        # Validate required columns
         if "production_kw" not in pv.columns:
             raise ValueError(f"PV CSV '{pv_path.name}' must contain 'production_kw'")
         if "consumption_kwh" not in cons.columns:
@@ -76,7 +59,6 @@ def load_merged_history(years: Iterable[int] = (2025, 2026, 2027)) -> pd.DataFra
 
         df = pv.merge(cons, on="datetime", how="inner").merge(price, on="datetime", how="inner")
 
-        # Optional weather merge
         if weather_path.exists():
             weather = _read_csv(weather_path)
             for col in ["temp_c", "cloud_cover_pct"]:
@@ -88,16 +70,12 @@ def load_merged_history(years: Iterable[int] = (2025, 2026, 2027)) -> pd.DataFra
             df["temp_c"] = pd.NA
             df["cloud_cover_pct"] = pd.NA
 
-        # Normalize units
-        df["pv_kwh"] = df["pv_kw"].astype(float).clip(lower=0.0) * 1.0  # 1h bucket
+        df["pv_kwh"] = df["pv_kw"].astype(float).clip(lower=0.0) * 1.0
         df["load_kwh"] = df["load_kwh"].astype(float).clip(lower=0.0)
         df["price_eur_kwh"] = df["price_eur_mwh"].astype(float) / 1000.0
 
-        # Ensure numeric where possible (weather may be NA)
-        if "temp_c" in df.columns:
-            df["temp_c"] = pd.to_numeric(df["temp_c"], errors="coerce")
-        if "cloud_cover_pct" in df.columns:
-            df["cloud_cover_pct"] = pd.to_numeric(df["cloud_cover_pct"], errors="coerce")
+        df["temp_c"] = pd.to_numeric(df["temp_c"], errors="coerce")
+        df["cloud_cover_pct"] = pd.to_numeric(df["cloud_cover_pct"], errors="coerce")
 
         frames.append(df[["datetime", "pv_kwh", "load_kwh", "price_eur_kwh", "temp_c", "cloud_cover_pct"]])
 
@@ -110,69 +88,94 @@ def load_merged_history(years: Iterable[int] = (2025, 2026, 2027)) -> pd.DataFra
 
 
 def window_for_today_utc(hours: int) -> TimeseriesWindow:
-    """
-    Default window: today 00:00 UTC -> today+hours (exclusive).
-    """
     if hours < 1 or hours > 168:
         raise ValueError("hours must be between 1 and 168")
     now = pd.Timestamp.utcnow()
-    start = now.normalize()  # 00:00 UTC today
+    start = now.normalize()
     end = start + pd.Timedelta(hours=hours)
     return TimeseriesWindow(start=start, end=end)
 
 
 def slice_window(df: pd.DataFrame, window: TimeseriesWindow) -> pd.DataFrame:
-    """
-    Slice merged df to [start, end).
-    """
     out = df[(df["datetime"] >= window.start) & (df["datetime"] < window.end)].copy()
     return out.sort_values("datetime").reset_index(drop=True)
 
 
-def build_today_plan(hours: int, history: Optional[pd.DataFrame] = None) -> pd.DataFrame:
+def _fallback_profile(history: pd.DataFrame, today_start: pd.Timestamp) -> pd.DataFrame:
     """
-    Build a planning dataframe for 'today 00:00 -> today+hours' by repeating a 24h pattern.
-
-    Strategy:
-    - Prefer the 24 hours right before today's 00:00 UTC (history slice)
-    - If not enough rows (synthetic / gaps), fall back to last 24 rows overall
-    - Repeat the 24h pattern to fill `hours`
-
-    Output columns (stable):
-      datetime, pv_kwh, load_kwh, price_eur_kwh, temp_c, cloud_cover_pct
+    Choose a 24-row profile to repeat:
+    - prefer the 24 hours right before today_start
+    - otherwise fallback to last 24 rows overall
     """
-    if history is None:
-        history = load_merged_history()
-
-    if history.empty:
-        raise ValueError("no history available")
-
-    window = window_for_today_utc(hours)
-    today_start = window.start
-
     history_end = today_start
     history_start = history_end - pd.Timedelta(hours=24)
+
     recent = history[(history["datetime"] >= history_start) & (history["datetime"] < history_end)].copy()
     hist = recent if len(recent) >= 24 else history.tail(24).copy()
 
     hist = hist.sort_values("datetime").reset_index(drop=True)
     if len(hist) < 24:
         raise ValueError("need at least 24 rows of history to build plan")
+    return hist
 
-    rows = []
-    for h in range(hours):
-        ts = today_start + pd.Timedelta(hours=h)
-        src = hist.iloc[h % 24]
 
-        rows.append(
-            {
-                "datetime": ts,
-                "pv_kwh": float(src["pv_kwh"]),
-                "load_kwh": float(src["load_kwh"]),
-                "price_eur_kwh": float(src["price_eur_kwh"]),
-                "temp_c": float(src["temp_c"]) if pd.notna(src["temp_c"]) else None,
-                "cloud_cover_pct": float(src["cloud_cover_pct"]) if pd.notna(src["cloud_cover_pct"]) else None,
-            }
-        )
+def build_today_plan(hours: int, history: Optional[pd.DataFrame] = None) -> pd.DataFrame:
+    """
+    Real-data-first plan for [today 00:00 UTC, today+hours):
 
-    return pd.DataFrame(rows)
+    - If the dataset contains those exact hours => return them directly (best case)
+    - If partially missing => fill missing hours by repeating a 24h fallback profile
+    """
+    if history is None:
+        history = load_merged_history()
+    if history.empty:
+        raise ValueError("no history available")
+
+    window = window_for_today_utc(hours)
+    start = window.start
+
+    idx = pd.date_range(start, periods=hours, freq="h", tz="UTC")
+
+    base = history.copy()
+    base["datetime"] = pd.to_datetime(base["datetime"], utc=True)
+    base = base.sort_values("datetime").set_index("datetime")
+
+    plan = base.reindex(idx)[["pv_kwh", "load_kwh", "price_eur_kwh", "temp_c", "cloud_cover_pct"]].copy()
+
+    # If everything exists, return immediately
+    if plan[["pv_kwh", "load_kwh", "price_eur_kwh"]].notna().all(axis=None):
+        plan = plan.reset_index().rename(columns={"index": "datetime"})
+        return plan
+
+    # Fill gaps using fallback repeating pattern
+    fallback = _fallback_profile(history, start)
+    fb = fallback.set_index("datetime").tail(24).reset_index(drop=True)
+
+    filled_rows = []
+    for h, ts in enumerate(idx):
+        row = plan.loc[ts]
+        if pd.notna(row["pv_kwh"]) and pd.notna(row["load_kwh"]) and pd.notna(row["price_eur_kwh"]):
+            filled_rows.append(
+                {
+                    "datetime": ts,
+                    "pv_kwh": float(row["pv_kwh"]),
+                    "load_kwh": float(row["load_kwh"]),
+                    "price_eur_kwh": float(row["price_eur_kwh"]),
+                    "temp_c": float(row["temp_c"]) if pd.notna(row["temp_c"]) else None,
+                    "cloud_cover_pct": float(row["cloud_cover_pct"]) if pd.notna(row["cloud_cover_pct"]) else None,
+                }
+            )
+        else:
+            src = fb.iloc[h % 24]
+            filled_rows.append(
+                {
+                    "datetime": ts,
+                    "pv_kwh": float(src["pv_kwh"]),
+                    "load_kwh": float(src["load_kwh"]),
+                    "price_eur_kwh": float(src["price_eur_kwh"]),
+                    "temp_c": float(src["temp_c"]) if pd.notna(src["temp_c"]) else None,
+                    "cloud_cover_pct": float(src["cloud_cover_pct"]) if pd.notna(src["cloud_cover_pct"]) else None,
+                }
+            )
+
+    return pd.DataFrame(filled_rows)
