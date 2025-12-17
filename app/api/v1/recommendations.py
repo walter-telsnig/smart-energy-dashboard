@@ -40,18 +40,14 @@ class RecommendationsResponse(BaseModel):
 
 @router.get("", response_model=RecommendationsResponse)
 def recommendations(
-    hours: int = Query(24, ge=1, le=168, description="Planning horizon in hours"),
-    year: int = Query(2027, description="Which dataset year to use as the current history"),
-    price_threshold_eur_kwh: float = Query(
-        0.12, ge=0.0, le=5.0, description="Cheap/expensive cut-off in €/kWh"
-    ),
+    hours: int = Query(24, ge=1, le=168),
+    price_threshold_eur_kwh: float = Query(0.12, ge=0.0, le=5.0),
 ) -> RecommendationsResponse:
     """
-    Return next-horizon recommendations.
+    Return recommendations starting from today.
     """
     try:
         rows = generate_recommendations(
-            year=year,
             hours=hours,
             price_threshold_eur_kwh=price_threshold_eur_kwh,
         )

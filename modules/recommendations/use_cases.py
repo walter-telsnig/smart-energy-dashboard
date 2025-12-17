@@ -42,47 +42,76 @@ def _load_csv(path: Path, required_cols: List[str]) -> pd.DataFrame:
     return df.sort_values("datetime").reset_index(drop=True)
 
 
-def load_inputs(year: int) -> pd.DataFrame:
-    pv_path = PV_DIR / f"pv_{year}_hourly.csv"
-    cons_path = CONS_DIR / f"consumption_{year}_hourly.csv"
-    price_path = PRICE_DIR / f"price_{year}_hourly.csv"
+def load_inputs() -> pd.DataFrame:
+    """
+    Load all available historical data (across years if needed).
+    """
+    frames = []
 
-    pv = _load_csv(pv_path, ["datetime", "production_kw"]).rename(
-        columns={"production_kw": "pv_kw"}
-    )
-    cons = _load_csv(cons_path, ["datetime", "consumption_kwh"]).rename(
-        columns={"consumption_kwh": "load_kwh"}
-    )
-    price = _load_csv(price_path, ["datetime", "price_eur_mwh"])
+    for year in [2025, 2026, 2027]:
+        try:
+            pv = _load_csv(
+                PV_DIR / f"pv_{year}_hourly.csv",
+                ["datetime", "production_kw"],
+            ).rename(columns={"production_kw": "pv_kw"})
 
-    df = pv.merge(cons, on="datetime").merge(price, on="datetime")
+            cons = _load_csv(
+                CONS_DIR / f"consumption_{year}_hourly.csv",
+                ["datetime", "consumption_kwh"],
+            ).rename(columns={"consumption_kwh": "load_kwh"})
+
+            price = _load_csv(
+                PRICE_DIR / f"price_{year}_hourly.csv",
+                ["datetime", "price_eur_mwh"],
+            )
+
+            df = pv.merge(cons, on="datetime").merge(price, on="datetime")
+            frames.append(df)
+
+        except FileNotFoundError:
+            continue
+
+    if not frames:
+        raise ValueError("no historical datasets available")
+
+    df = pd.concat(frames, ignore_index=True)
 
     df["pv_kwh"] = df["pv_kw"].astype(float).clip(lower=0) * 1.0
     df["price_eur_kwh"] = df["price_eur_mwh"] / 1000.0
 
-    return df[["datetime", "pv_kwh", "load_kwh", "price_eur_kwh"]]
+    return df[["datetime", "pv_kwh", "load_kwh", "price_eur_kwh"]].sort_values("datetime")
 
 
 # ---------- recommendation logic ------------------------------------------------
 
 def generate_recommendations(
     *,
-    year: int,
     hours: int,
     price_threshold_eur_kwh: float,
 ) -> List[RecommendationRow]:
-    df = load_inputs(year)
 
-    if len(df) < 24:
-        raise ValueError("need at least 24 hours of history")
+    df = load_inputs()
 
-    last_ts = df["datetime"].iloc[-1]
-    hist = df.tail(24).reset_index(drop=True)
+    now = pd.Timestamp.utcnow().floor("H")
+    today_start = now.normalize()
+
+    history_end = today_start
+    history_start = history_end - pd.Timedelta(hours=24)
+
+    hist = df[
+        (df["datetime"] >= history_start)
+        & (df["datetime"] < history_end)
+    ]
+
+    if len(hist) < 24:
+        raise ValueError("not enough recent history for recommendations")
+
+    hist = hist.reset_index(drop=True)
 
     rows: List[RecommendationRow] = []
 
     for h in range(hours):
-        ts = last_ts + pd.Timedelta(hours=h + 1)
+        ts = today_start + pd.Timedelta(hours=h)
         row = hist.iloc[h % 24]
 
         surplus = float(row["pv_kwh"]) - float(row["load_kwh"])
