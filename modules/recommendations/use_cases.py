@@ -80,7 +80,6 @@ def generate_recommendations(
         price = float(r["price_eur_kwh"])
         pv = float(r["pv_kwh_adj"])
         load = float(r["load_kwh"])
-        surplus = pv - load
 
         cloud = float(r["cloud_cover_pct"]) if ("cloud_cover_pct" in plan.columns and pd.notna(r["cloud_cover_pct"])) else None
 

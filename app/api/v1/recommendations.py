@@ -3,7 +3,6 @@ from __future__ import annotations
 from datetime import datetime
 from typing import List, Literal, Optional
 
-import pandas as pd
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
