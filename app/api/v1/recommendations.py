@@ -12,14 +12,12 @@ from __future__ import annotations
 from datetime import datetime
 from typing import List, Literal
 
+import pandas as pd
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from modules.recommendations.use_cases import (
-    generate_recommendations,
-    load_inputs,
-)
 from modules.recommendations.cost_model import compare_costs
+from modules.recommendations.use_cases import build_planning_inputs, generate_recommendations
 
 router = APIRouter(prefix="/recommendations", tags=["recommendations"])
 
@@ -57,7 +55,7 @@ def recommendations(
     price_threshold_eur_kwh: float = Query(0.12, ge=0.0, le=5.0),
 ) -> RecommendationsResponse:
     """
-    Return recommendations starting from the current day.
+    Return recommendations starting from the current day (00:00 UTC) for `hours`.
     """
     try:
         rows = generate_recommendations(
@@ -79,33 +77,26 @@ def cost_summary(
     price_threshold_eur_kwh: float = Query(0.12, ge=0.0, le=5.0),
 ) -> CostSummaryResponse:
     """
-    Compare electricity cost with vs without recommendations.
+    Compare electricity cost with vs without recommendations for the SAME planning window
+    shown by /recommendations and /timeseries/merged.
     """
     try:
-        # Load merged PV / consumption / price data
-        df = load_inputs()
-
-        # Limit to planning horizon (most recent hours)
-        df = df.tail(hours)
+        # Build the same planning horizon used by the recommendations (today window)
+        df = build_planning_inputs(hours)
 
         # Generate recommendations for same horizon
         reco_rows = generate_recommendations(
             hours=hours,
             price_threshold_eur_kwh=price_threshold_eur_kwh,
         )
+        reco_df = pd.DataFrame(reco_rows)
 
-        reco_df = (
-            __import__("pandas")
-            .DataFrame(reco_rows)
-            .rename(columns={"timestamp": "timestamp"})
-        )
-
-        # Compare costs
+        # Cost KPIs (v1 cost model uses pv_kwh/load_kwh/price_eur_kwh and reco actions)
         result = compare_costs(df, reco_df)
 
-        baseline = result["baseline_cost_eur"]
-        optimized = result["recommended_cost_eur"]
-        savings = result["savings_eur"]
+        baseline = float(result["baseline_cost_eur"])
+        optimized = float(result["recommended_cost_eur"])
+        savings = float(result["savings_eur"])
         savings_pct = (savings / baseline) * 100 if baseline > 0 else 0.0
 
     except Exception as e:

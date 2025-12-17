@@ -10,7 +10,7 @@ API_BASE = "http://localhost:8000/api/v1"
 st.set_page_config(page_title="Energy Recommendations", layout="wide")
 
 st.title("⚡ Energy Usage Recommendations")
-st.caption("Rule-based planning based on PV, consumption, and market prices")
+st.caption("Rule-based planning based on PV, consumption, market prices, and weather")
 
 
 with st.sidebar:
@@ -25,6 +25,8 @@ with st.sidebar:
         value=0.12,
         step=0.01,
     )
+
+    show_weather = st.checkbox("Show weather charts (temperature & cloud cover)", value=True)
 
     refresh = st.button("🔄 Generate recommendations")
 
@@ -61,7 +63,7 @@ def load_cost_summary(hours: int, price_threshold: float) -> dict:
 
 @st.cache_data(show_spinner=False)
 def load_timeseries_window(hours: int) -> pd.DataFrame:
-    # NEW: window mode => no year needed, already normalized (pv_kwh/load_kwh/price_eur_kwh)
+    # window mode => planning window from today's 00:00 UTC for `hours`
     resp = requests.get(
         f"{API_BASE}/timeseries/merged",
         params={"window": "true", "hours": hours},
@@ -84,6 +86,7 @@ except Exception as e:
     st.stop()
 
 
+# ---------------- KPIs ----------------
 st.subheader("💰 Cost Impact")
 kpi1, kpi2, kpi3, kpi4 = st.columns(4)
 kpi1.metric("Baseline cost (€)", f"{cost['baseline_cost_eur']:.2f}")
@@ -92,6 +95,7 @@ kpi3.metric("Savings (€)", f"{cost['savings_eur']:.2f}")
 kpi4.metric("Savings (%)", f"{cost['savings_percent']:.2f} %")
 
 
+# ---------------- Recommendations Table ----------------
 st.subheader("📋 Recommendation Plan")
 if reco_df.empty:
     st.warning("No recommendations returned.")
@@ -108,12 +112,20 @@ reco_df["action_label"] = reco_df["action"].map(ACTION_LABELS).fillna(reco_df["a
 st.dataframe(reco_df[["timestamp", "action_label", "reason", "score"]], use_container_width=True)
 
 
+# ---------------- PV / Load / Price charts ----------------
 st.subheader("📈 PV, Load & Price with Recommendation Overlay")
 if ts_df.empty:
     st.warning("No timeseries window returned from /timeseries/merged?window=true")
     st.stop()
 
 plot_df = ts_df.copy()
+
+# Ensure weather columns exist even if API returns None / missing
+if "temp_c" not in plot_df.columns:
+    plot_df["temp_c"] = None
+if "cloud_cover_pct" not in plot_df.columns:
+    plot_df["cloud_cover_pct"] = None
+
 actions = reco_df[["timestamp", "action", "score"]].rename(columns={"timestamp": "datetime"}).copy()
 actions["datetime"] = pd.to_datetime(actions["datetime"], utc=True)
 
@@ -127,14 +139,27 @@ pv_line = base.mark_line().encode(
 )
 
 load_line = base.mark_line(strokeDash=[6, 3]).encode(
-    y=alt.Y("load_kwh:Q"),
+    y=alt.Y("load_kwh:Q", title="Energy (kWh)"),
     tooltip=["datetime:T", "load_kwh:Q"],
 )
 
-action_points = base.transform_filter(alt.datum.action != None).mark_point(filled=True, size=80).encode(  # noqa: E711
-    y=alt.Y("pv_kwh:Q"),
-    shape=alt.Shape("action:N"),
-    tooltip=["datetime:T", "action:N", "score:Q", "pv_kwh:Q", "load_kwh:Q", "price_eur_kwh:Q"],
+action_points = (
+    base.transform_filter(alt.datum.action != None)  # noqa: E711
+    .mark_point(filled=True, size=80)
+    .encode(
+        y=alt.Y("pv_kwh:Q"),
+        shape=alt.Shape("action:N"),
+        tooltip=[
+            "datetime:T",
+            "action:N",
+            "score:Q",
+            "pv_kwh:Q",
+            "load_kwh:Q",
+            "price_eur_kwh:Q",
+            "temp_c:Q",
+            "cloud_cover_pct:Q",
+        ],
+    )
 )
 
 price_line = alt.Chart(plot_df).mark_line().encode(
@@ -152,17 +177,50 @@ st.caption(
 )
 
 
+# ---------------- Weather charts ----------------
+if show_weather:
+    st.subheader("🌦️ Weather (Temperature & Cloud Cover)")
+
+    # Temperature
+    temp_df = plot_df.dropna(subset=["temp_c"]).copy()
+    if temp_df.empty:
+        st.info("No temperature data available in the current planning window.")
+    else:
+        temp_chart = alt.Chart(temp_df).mark_line().encode(
+            x=alt.X("datetime:T", title="Time"),
+            y=alt.Y("temp_c:Q", title="Temperature (°C)"),
+            tooltip=["datetime:T", "temp_c:Q"],
+        )
+        st.altair_chart(temp_chart.interactive(), use_container_width=True)
+
+    # Cloud cover
+    cloud_df = plot_df.dropna(subset=["cloud_cover_pct"]).copy()
+    if cloud_df.empty:
+        st.info("No cloud cover data available in the current planning window.")
+    else:
+        cloud_chart = alt.Chart(cloud_df).mark_line().encode(
+            x=alt.X("datetime:T", title="Time"),
+            y=alt.Y("cloud_cover_pct:Q", title="Cloud cover (%)"),
+            tooltip=["datetime:T", "cloud_cover_pct:Q"],
+        )
+        st.altair_chart(cloud_chart.interactive(), use_container_width=True)
+
+
 with st.expander("ℹ️ How are these recommendations generated?"):
     st.markdown(
         """
 **Current logic (v1):**
-- Takes the latest available full-day profile from the datasets (24h)
-- Projects it onto *today* (00:00 → forward, up to 1 week)
-- Applies transparent rule-based decisions:
-  - **Charge** when PV surplus is expected
-  - **Discharge** during high-price hours
-  - **Shift load** when energy is cheap and PV exists
-  - **Idle** otherwise
+- Builds a *planning window* from today's 00:00 UTC for the chosen horizon
+- Uses the last-24h pattern as a simple baseline projection
+- Integrates weather in a transparent way:
+  - High cloud cover reduces expected PV output (simple heuristic)
+  - Cloudy hours slightly reduce the confidence score for PV-dependent actions
+
+**Actions:**
+- **Charge** when PV surplus is expected
+- **Discharge** during high-price hours to avoid grid imports
+- **Shift load** when energy is cheap and PV exists
+- **Idle** otherwise
 
 **Cost KPIs:**
 - Baseline = grid usage without any action

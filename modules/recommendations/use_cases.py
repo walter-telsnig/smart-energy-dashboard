@@ -1,18 +1,12 @@
-# modules/recommendations/use_cases.py
 from __future__ import annotations
 
-from pathlib import Path
 from typing import List, Literal, TypedDict
 
 import pandas as pd
 
+from modules.timeseries.use_cases import build_today_plan, load_merged_history
+
 Action = Literal["charge", "discharge", "shift_load", "idle"]
-
-PV_DIR = Path("infra") / "data" / "pv"
-CONS_DIR = Path("infra") / "data" / "consumption"
-PRICE_DIR = Path("infra") / "data" / "market"
-
-AVAILABLE_YEARS = [2025, 2026, 2027]
 
 
 class RecommendationRow(TypedDict):
@@ -22,96 +16,48 @@ class RecommendationRow(TypedDict):
     score: float
 
 
-def _load_csv(path: Path, required_cols: List[str]) -> pd.DataFrame:
-    if not path.exists():
-        raise FileNotFoundError(f"missing file: {path}")
-
-    df = pd.read_csv(path)
-    for c in required_cols:
-        if c not in df.columns:
-            raise ValueError(f"CSV '{path.name}' must contain column '{c}'")
-
-    df["datetime"] = pd.to_datetime(df["datetime"], utc=True)
-    return df.sort_values("datetime").reset_index(drop=True)
-
-
-def load_inputs() -> pd.DataFrame:
-    frames = []
-
-    for year in AVAILABLE_YEARS:
-        try:
-            pv = _load_csv(PV_DIR / f"pv_{year}_hourly.csv", ["datetime", "production_kw"]).rename(
-                columns={"production_kw": "pv_kw"}
-            )
-            cons = _load_csv(CONS_DIR / f"consumption_{year}_hourly.csv", ["datetime", "consumption_kwh"]).rename(
-                columns={"consumption_kwh": "load_kwh"}
-            )
-            price = _load_csv(PRICE_DIR / f"price_{year}_hourly.csv", ["datetime", "price_eur_mwh"])
-
-            df = pv.merge(cons, on="datetime").merge(price, on="datetime")
-            frames.append(df)
-        except FileNotFoundError:
-            continue
-
-    if not frames:
-        raise ValueError("no historical datasets available")
-
-    df = pd.concat(frames, ignore_index=True)
-
-    df["pv_kwh"] = df["pv_kw"].astype(float).clip(lower=0) * 1.0
-    df["price_eur_kwh"] = df["price_eur_mwh"].astype(float) / 1000.0
-
-    return df[["datetime", "pv_kwh", "load_kwh", "price_eur_kwh"]].sort_values("datetime").reset_index(drop=True)
-
-
-def _last_full_day_profile(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Latest day with a full 24h profile, returned as 24 rows (00..23).
-    """
-    last_dt = df["datetime"].max()
-    day = last_dt.normalize()
-
-    for _ in range(10):
-        day_slice = df[(df["datetime"] >= day) & (df["datetime"] < day + pd.Timedelta(hours=24))].copy()
-        if len(day_slice) >= 24:
-            return day_slice.head(24).reset_index(drop=True)
-        day = day - pd.Timedelta(days=1)
-
-    raise ValueError("could not find a full 24h profile in data")
-
-
 def _planning_frame(hours: int) -> pd.DataFrame:
     """
-    Build a planning dataframe for 'today 00:00 -> today+hours' using the last available full-day profile.
+    Canonical planning frame:
+    - use merged history (pv/load/price + optional weather)
+    - build a today-window plan using the shared builder
     """
-    df = load_inputs()
-    profile = _last_full_day_profile(df)
-
-    today_start = pd.Timestamp.utcnow().normalize()
-    rows = []
-    for h in range(hours):
-        ts = today_start + pd.Timedelta(hours=h)
-        src = profile.iloc[h % 24]
-        rows.append(
-            {
-                "datetime": ts,
-                "pv_kwh": float(src["pv_kwh"]),
-                "load_kwh": float(src["load_kwh"]),
-                "price_eur_kwh": float(src["price_eur_kwh"]),
-            }
-        )
-    return pd.DataFrame(rows)
+    history = load_merged_history()
+    plan = build_today_plan(hours=hours, history=history)
+    return plan
 
 
 def generate_recommendations(*, hours: int, price_threshold_eur_kwh: float) -> List[RecommendationRow]:
+    """
+    v1 rule-based recommendations with a light weather integration:
+    - Adjust expected PV using cloud cover (reduces PV when cloudy)
+    - Use adjusted PV for surplus decisions
+    """
     plan = _planning_frame(hours)
+
+    # Weather-aware PV adjustment (simple, transparent heuristic)
+    # pv_adj = pv * (1 - alpha * cloud_cover/100), clipped at >=0
+    alpha = 0.7
+    if "cloud_cover_pct" in plan.columns:
+        cc = plan["cloud_cover_pct"].fillna(0).astype(float).clip(0, 100)
+        plan["pv_kwh_adj"] = (plan["pv_kwh"].astype(float) * (1 - alpha * (cc / 100.0))).clip(lower=0.0)
+    else:
+        plan["pv_kwh_adj"] = plan["pv_kwh"].astype(float)
 
     rows: List[RecommendationRow] = []
     for _, r in plan.iterrows():
         ts = pd.to_datetime(r["datetime"], utc=True)
-        surplus = float(r["pv_kwh"]) - float(r["load_kwh"])
-        price = float(r["price_eur_kwh"])
 
+        pv = float(r["pv_kwh_adj"])
+        load = float(r["load_kwh"])
+        price = float(r["price_eur_kwh"])
+        surplus = pv - load
+
+        cloud = None
+        if "cloud_cover_pct" in plan.columns and pd.notna(r.get("cloud_cover_pct")):
+            cloud = float(r["cloud_cover_pct"])
+
+        # Decision rules (same spirit as before, but based on adjusted PV)
         if surplus > 0.2:
             action: Action = "charge"
             reason = f"predicted PV surplus ({surplus:.2f} kWh)"
@@ -120,7 +66,7 @@ def generate_recommendations(*, hours: int, price_threshold_eur_kwh: float) -> L
             action = "discharge"
             reason = "high price hour; avoid grid usage"
             score = 0.75
-        elif price < price_threshold_eur_kwh and surplus > 0:
+        elif price < price_threshold_eur_kwh and pv > 0.2:
             action = "shift_load"
             reason = "cheap hour with PV available"
             score = 0.65
@@ -129,18 +75,26 @@ def generate_recommendations(*, hours: int, price_threshold_eur_kwh: float) -> L
             reason = "no clear advantage"
             score = 0.30
 
+        # Confidence tweak based on cloudiness (optional, but makes weather matter)
+        if cloud is not None and cloud > 80 and action in ("charge", "shift_load"):
+            score = max(0.0, score - 0.10)
+            reason += f" (cloudy: {cloud:.0f}%)"
+
         rows.append(
             {
                 "timestamp": ts.isoformat(),
                 "action": action,
                 "reason": reason,
-                "score": score,
+                "score": float(min(max(score, 0.0), 1.0)),
             }
         )
 
     return rows
 
 
-# Optional but useful for cost-summary / reuse:
 def build_planning_inputs(hours: int) -> pd.DataFrame:
+    """
+    Used by cost-summary to ensure KPIs are computed on the SAME horizon
+    as the recommendations shown in the UI.
+    """
     return _planning_frame(hours)
