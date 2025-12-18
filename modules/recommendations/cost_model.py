@@ -1,12 +1,12 @@
 """
 Cost model for recommendations.
 
-Key change vs old v1:
-- Baseline cost = (load - pv)+ * price - export * feed_in_tariff (or market)
-- Optimized cost (battery enabled) = run battery simulation (SoC, power limits, efficiency)
-  and use resulting grid_import_kwh / grid_export_kwh
+v1 (simple + user-friendly):
+- Baseline cost = grid_import_kwh * price
+- Optimized cost (battery enabled) = run battery simulation and use simulated grid_import_kwh * price
+- Export revenue is ignored by default to avoid confusing negative "cost" in PV-heavy datasets.
 
-This makes your KPI section actually meaningful.
+You can enable export revenue later when you want to model feed-in tariffs / market export.
 """
 
 from __future__ import annotations
@@ -24,6 +24,12 @@ ExportMode = Literal["market", "feed_in"]
 
 @dataclass(frozen=True)
 class CostParams:
+    """
+    v1 simplification: export revenue is OFF by default.
+    """
+    include_export_revenue: bool = False
+
+    # kept for later (only used when include_export_revenue=True)
     export_mode: ExportMode = "feed_in"
     feed_in_tariff_eur_per_kwh: float = 0.08
 
@@ -44,13 +50,23 @@ def _baseline_flows(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def _cost_from_flows(flows: pd.DataFrame, params: CostParams) -> Dict[str, float]:
-    import_cost = float((flows["grid_import_kwh"] * flows["price_eur_kwh"]).sum())
+def _export_revenue(flows: pd.DataFrame, params: CostParams) -> float:
+    """
+    Return export revenue in EUR. In v1 we typically disable this entirely.
+    """
+    if not params.include_export_revenue:
+        return 0.0
 
     if params.export_mode == "market":
-        export_revenue = float((flows["grid_export_kwh"] * flows["price_eur_kwh"]).sum())
-    else:
-        export_revenue = float((flows["grid_export_kwh"] * params.feed_in_tariff_eur_per_kwh).sum())
+        return float((flows["grid_export_kwh"] * flows["price_eur_kwh"]).sum())
+
+    # feed_in
+    return float((flows["grid_export_kwh"] * params.feed_in_tariff_eur_per_kwh).sum())
+
+
+def _cost_from_flows(flows: pd.DataFrame, params: CostParams) -> Dict[str, float]:
+    import_cost = float((flows["grid_import_kwh"] * flows["price_eur_kwh"]).sum())
+    export_revenue = _export_revenue(flows, params)
 
     total = import_cost - export_revenue
     return {
@@ -74,15 +90,15 @@ def compare_costs(
       baseline_cost_eur, recommended_cost_eur, savings_eur, ...
     """
     _validate_plan(plan_df)
-    cost_params = cost_params or CostParams()
+    params = cost_params or CostParams()  # export revenue OFF by default
 
     base_flows = _baseline_flows(plan_df)
-    base = _cost_from_flows(base_flows, cost_params)
+    base = _cost_from_flows(base_flows, params)
 
     if not battery_enabled:
         with_batt = base
     else:
-        battery_params = battery_params or BatteryParams()
+        batt = battery_params or BatteryParams()
 
         ts = plan_df.copy()
         ts["datetime"] = pd.to_datetime(ts["datetime"], utc=True)
@@ -96,7 +112,7 @@ def compare_costs(
             index=ts.index,
         )
 
-        sim_out = simulate(battery_params, sim_in)
+        sim_out = simulate(batt, sim_in)
 
         flows = pd.DataFrame(
             {
@@ -107,7 +123,7 @@ def compare_costs(
             index=ts.index,
         )
 
-        with_batt = _cost_from_flows(flows, cost_params)
+        with_batt = _cost_from_flows(flows, params)
 
     return {
         "baseline_cost_eur": base["cost_eur"],
