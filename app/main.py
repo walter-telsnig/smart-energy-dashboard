@@ -10,8 +10,6 @@ from app.api.v1.consumption import router as consumption_router
 from app.api.v1.market import router as market_router
 from app.api.v1.battery import router as battery_router
 
-from modules.accounts.model import Account
-
 from infra.db import Base, engine
 
 def create_app() -> FastAPI:

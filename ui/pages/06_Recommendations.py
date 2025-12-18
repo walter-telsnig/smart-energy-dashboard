@@ -137,7 +137,7 @@ ACTION_LABELS = {
 }
 current_action_label = ACTION_LABELS.get(str(current_rec.get("action", "")), str(current_rec.get("action", "")))
 current_reason = str(current_rec.get("reason", "")).strip()
-current_time_str = pd.to_datetime(current_rec["timestamp"], utc=True).strftime("%H:%M UTC")
+current_time_str = pd.to_datetime(current_rec["timestamp"], utc=True).strftime("%H:%M")
 
 st.info(f"**Right now ({current_time_str}) → {current_action_label}**  \n{current_reason}")
 
