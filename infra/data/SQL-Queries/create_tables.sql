@@ -12,3 +12,9 @@ create table pv (
 	datetime TIMESTAMP Not Null Primary Key,
 	production_kw Float
 );
+
+create table weather (
+	datetime TIMESTAMP Not Null Primary Key,
+	temp_c Float,
+	cloud_cover_pct Float
+);
