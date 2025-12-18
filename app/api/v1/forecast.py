@@ -84,7 +84,7 @@ def forecast_next_endpoint(
     return ForecastResponse(
         target="pv",
         hours=hours,
-        rows=rows,
+        rows=[ForecastPoint(**r) for r in rows],
     )
 
 @router.post("/train", response_model=TrainResponse)

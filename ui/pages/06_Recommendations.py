@@ -14,53 +14,60 @@ with st.sidebar:
     st.header("Planning")
 
     hours = st.slider("Planning horizon (hours)", min_value=6, max_value=168, value=24, step=6)
-
     battery_enabled = st.toggle("Use battery recommendations", value=True)
-
     refresh = st.button("Generate recommendations")
 
 if refresh:
     st.cache_data.clear()
 
+
+def _bool_param(v: bool) -> str:
+    return "true" if v else "false"
+
+
 # ---------------- API loaders ----------------
 @st.cache_data(show_spinner=False)
 def load_recommendations(hours: int, battery_enabled: bool) -> pd.DataFrame:
-    resp = requests.get(
-        f"{API_BASE}/recommendations",
-        params={"hours": int(hours), "battery_enabled": str(battery_enabled).lower()},
-        timeout=10,
-    )
+    params: dict[str, str] = {
+        "hours": str(int(hours)),
+        "battery_enabled": _bool_param(battery_enabled),
+    }
+    resp = requests.get(f"{API_BASE}/recommendations", params=params, timeout=10)
     resp.raise_for_status()
+
     data = resp.json()
     df = pd.DataFrame(data.get("rows", []))
     if df.empty:
         return df
+
     df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True)
     return df
 
 
 @st.cache_data(show_spinner=False)
 def load_cost_summary(hours: int, battery_enabled: bool) -> dict:
-    resp = requests.get(
-        f"{API_BASE}/recommendations/cost-summary",
-        params={"hours": int(hours), "battery_enabled": str(battery_enabled).lower()},
-        timeout=10,
-    )
+    params: dict[str, str] = {
+        "hours": str(int(hours)),
+        "battery_enabled": _bool_param(battery_enabled),
+    }
+    resp = requests.get(f"{API_BASE}/recommendations/cost-summary", params=params, timeout=10)
     resp.raise_for_status()
     return resp.json()
 
 
 @st.cache_data(show_spinner=False)
 def load_timeseries_window(hours: int) -> pd.DataFrame:
-    resp = requests.get(
-        f"{API_BASE}/timeseries/merged",
-        params={"window": "true", "hours": int(hours)},
-        timeout=10,
-    )
+    params: dict[str, str] = {
+        "window": "true",
+        "hours": str(int(hours)),
+    }
+    resp = requests.get(f"{API_BASE}/timeseries/merged", params=params, timeout=10)
     resp.raise_for_status()
+
     df = pd.DataFrame(resp.json())
     if df.empty:
         return df
+
     df["datetime"] = pd.to_datetime(df["datetime"], utc=True)
     return df.sort_values("datetime").reset_index(drop=True)
 
@@ -83,14 +90,10 @@ with left:
     st.caption("Simple, human-friendly suggestions based on PV, consumption, prices, and weather")
 
 with right:
-    # Show current (closest hour) weather from the planning window
     if not ts_df.empty and "temp_c" in ts_df.columns and "cloud_cover_pct" in ts_df.columns:
         now = (pd.Timestamp.utcnow() + pd.Timedelta(hours=1)).floor("h")
         current_slice = ts_df[ts_df["datetime"] <= now]
-        if current_slice.empty:
-            current_row = ts_df.iloc[0]
-        else:
-            current_row = current_slice.iloc[-1]
+        current_row = ts_df.iloc[0] if current_slice.empty else current_slice.iloc[-1]
 
         temp = current_row.get("temp_c", None)
         cloud = current_row.get("cloud_cover_pct", None)
@@ -125,7 +128,6 @@ if reco_df.empty:
 now = (pd.Timestamp.utcnow() + pd.Timedelta(hours=1)).floor("h")
 reco_df = reco_df.sort_values("timestamp").reset_index(drop=True)
 
-# pick the next recommendation at/after "now"; fallback to last if we're past window
 future = reco_df[reco_df["timestamp"] >= now]
 current_rec = future.iloc[0] if not future.empty else reco_df.iloc[-1]
 
@@ -135,6 +137,7 @@ ACTION_LABELS = {
     "shift_load": "🟡 Good time to run appliances (dishwasher / laundry / charging)",
     "idle": "⚪ No action needed",
 }
+
 current_action_label = ACTION_LABELS.get(str(current_rec.get("action", "")), str(current_rec.get("action", "")))
 current_reason = str(current_rec.get("reason", "")).strip()
 current_time_str = pd.to_datetime(current_rec["timestamp"], utc=True).strftime("%H:%M")
@@ -151,12 +154,7 @@ baseline = float(cost.get("baseline_cost_eur", 0.0))
 optimized = float(cost.get("optimized_cost_eur", 0.0))
 savings = float(cost.get("savings_eur", 0.0))
 
-# If baseline is 0 (or negative due to export revenue models), percent isn’t meaningful.
-# We show % only when baseline is positive.
-if baseline > 0:
-    savings_pct = (savings / baseline) * 100
-else:
-    savings_pct = 0.0
+savings_pct = (savings / baseline) * 100 if baseline > 0 else 0.0
 
 kpi1.metric("Baseline cost (€)", f"{baseline:.2f}")
 kpi2.metric("Optimized cost (€)", f"{optimized:.2f}")
@@ -168,10 +166,7 @@ kpi4.metric("Savings (%)", f"{savings_pct:.2f} %")
 st.subheader("📋 Recommendation Plan")
 
 reco_df["action_label"] = reco_df["action"].map(ACTION_LABELS).fillna(reco_df["action"])
-st.dataframe(
-    reco_df[["timestamp", "action_label", "reason", "score"]],
-    use_container_width=True,
-)
+st.dataframe(reco_df[["timestamp", "action_label", "reason", "score"]], use_container_width=True)
 
 
 # ---------------- PV / Load / Price with overlay ----------------
@@ -218,7 +213,6 @@ price_line = alt.Chart(plot_df).mark_line().encode(
 
 st.altair_chart((pv_line + load_line + action_points).interactive(), use_container_width=True)
 st.altair_chart(price_line.interactive(), use_container_width=True)
-
 
 with st.expander("ℹ️ What does this mean?"):
     st.markdown(

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import List, Literal, Optional, Any, Dict
+from typing import List, Literal, Optional, Any, cast
+from collections.abc import Mapping, Sequence
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -67,7 +68,7 @@ def _parse_iso_z(ts: str) -> datetime:
     return datetime.fromisoformat(s).astimezone(timezone.utc)
 
 
-def _rows_to_response_points(rows: List[Dict[str, Any]]) -> List[RecommendationPoint]:
+def _rows_to_response_points(rows: Sequence[Mapping[str, Any]]) -> List[RecommendationPoint]:
     out: List[RecommendationPoint] = []
     for r in rows:
         ts_raw = r.get("timestamp")
@@ -78,15 +79,19 @@ def _rows_to_response_points(rows: List[Dict[str, Any]]) -> List[RecommendationP
         else:
             raise ValueError(f"Invalid timestamp value: {ts_raw!r}")
 
+        action_raw = r.get("action")
+        action = cast(Action, action_raw)
+
         out.append(
             RecommendationPoint(
                 timestamp=ts,
-                action=r["action"],
+                action=action,
                 reason=str(r.get("reason", "")),
                 score=float(r.get("score", 0.0)),
             )
         )
     return out
+
 
 
 # ---------------- endpoints ----------------

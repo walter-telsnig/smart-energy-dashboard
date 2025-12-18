@@ -32,7 +32,9 @@ def _auto_price_threshold(prices: pd.Series) -> float:
     s = pd.to_numeric(prices, errors="coerce").dropna()
     if s.empty:
         return 0.12
-    return float(np.quantile(s.values, 0.75))
+
+    arr = s.astype("float64").to_numpy()
+    return float(np.quantile(arr, 0.75))
 
 
 def generate_recommendations(
@@ -49,11 +51,15 @@ def generate_recommendations(
     - If battery_enabled => simulate SoC and derive actions from actual charge/discharge
     - Provide shift_load suggestions as "advice" during cheap hours (optional)
     """
-    plan = build_planning_inputs(hours).copy()
+    plan = build_planning_inputs(hours).copy().reset_index(drop=True)
 
     # --- Weather-aware PV adjustment (transparent heuristic)
     alpha = 0.70
-    cc = plan["cloud_cover_pct"].fillna(0).astype(float).clip(0, 100) if "cloud_cover_pct" in plan.columns else 0.0
+    if "cloud_cover_pct" in plan.columns:
+        cc = plan["cloud_cover_pct"].fillna(0).astype(float).clip(0, 100)
+    else:
+        cc = pd.Series(0.0, index=plan.index, dtype="float64")
+
     plan["pv_kwh_adj"] = (plan["pv_kwh"].astype(float) * (1 - alpha * (cc / 100.0))).clip(lower=0.0)
 
     # --- Threshold (auto if None)
@@ -65,6 +71,7 @@ def generate_recommendations(
         ts = plan.copy()
         ts["datetime"] = pd.to_datetime(ts["datetime"], utc=True)
         ts = ts.sort_values("datetime").set_index("datetime")
+
         sim_in = pd.DataFrame(
             {
                 "production_kwh": ts["pv_kwh_adj"].astype(float).clip(lower=0.0),
@@ -75,21 +82,27 @@ def generate_recommendations(
         sim_out = simulate(battery_params, sim_in)
 
     rows: List[RecommendationRow] = []
-    for i, r in plan.iterrows():
-        ts = pd.to_datetime(r["datetime"], utc=True)
+
+    # Use integer positions to keep mypy happy (iloc/iat want ints)
+    for i in range(len(plan)):
+        r = plan.iloc[i]
+
+        ts_dt = pd.to_datetime(r["datetime"], utc=True)
         price = float(r["price_eur_kwh"])
         pv = float(r["pv_kwh_adj"])
 
-        cloud = float(r["cloud_cover_pct"]) if ("cloud_cover_pct" in plan.columns and pd.notna(r["cloud_cover_pct"])) else None
+        cloud: Optional[float] = None
+        if "cloud_cover_pct" in plan.columns and pd.notna(r["cloud_cover_pct"]):
+            cloud = float(r["cloud_cover_pct"])
 
         action: Action = "idle"
         reason = "no clear advantage"
         score = 0.30
 
         if battery_enabled and sim_out is not None:
-            ch = float(sim_out["charge_kwh"].iloc[i])
-            dch = float(sim_out["discharge_kwh"].iloc[i])
-            soc = float(sim_out["soc_kwh"].iloc[i])
+            ch = float(sim_out["charge_kwh"].iat[i])
+            dch = float(sim_out["discharge_kwh"].iat[i])
+            soc = float(sim_out["soc_kwh"].iat[i])
 
             if ch > 0.01:
                 action = "charge"
@@ -100,7 +113,6 @@ def generate_recommendations(
                 reason = f"battery discharging to reduce grid import (price {price:.3f} €/kWh)"
                 score = 0.80
             else:
-                # If battery can't help, suggest shifting flexible load if cheap
                 if price <= thr and pv > 0.2:
                     action = "shift_load"
                     reason = f"cheap hour (≤ {thr:.3f} €/kWh) with PV available"
@@ -110,7 +122,6 @@ def generate_recommendations(
                     reason = "battery not needed for this hour"
                     score = 0.35
         else:
-            # No battery: only give "advice" style recommendations
             if price <= thr and pv > 0.2:
                 action = "shift_load"
                 reason = f"cheap hour (≤ {thr:.3f} €/kWh) with PV available"
@@ -120,14 +131,13 @@ def generate_recommendations(
                 reason = "no action recommended"
                 score = 0.30
 
-        # small confidence tweak if very cloudy and action relies on PV
         if cloud is not None and cloud > 80 and action in ("charge", "shift_load"):
             score = max(0.0, score - 0.10)
             reason += f" (cloudy: {cloud:.0f}%)"
 
         rows.append(
             {
-                "timestamp": ts.isoformat(),
+                "timestamp": ts_dt.isoformat(),
                 "action": action,
                 "reason": reason,
                 "score": float(min(max(score, 0.0), 1.0)),
