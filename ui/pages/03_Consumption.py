@@ -37,12 +37,14 @@ def cons_catalog_api(base: str) -> List[str]:
 
 @st.cache_data(show_spinner=True)
 def cons_range_api(base: str, key: str, start: str, end: str) -> pd.DataFrame:
-    if not key: return pd.DataFrame()
+    if not key:
+        return pd.DataFrame()
     url = f"{base}/api/v1/consumption/range"
     r = requests.get(url, params={"key": key, "start": start, "end": end}, timeout=10)
     r.raise_for_status()
     rows = r.json().get("rows", [])
-    if not rows: return pd.DataFrame()
+    if not rows:
+        return pd.DataFrame()
     
     df = pd.DataFrame(rows)
     df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True)
@@ -65,34 +67,47 @@ api_defaults = (pd.date_range("2025-01-01", periods=1).date[0], pd.date_range("2
 if use_api:
     try:
         series = cons_catalog_api(api_base)
-        if not series: st.error("Catalog empty"); st.stop()
-        if "cons_key" not in st.session_state: st.session_state.cons_key = series[0]
+        if not series:
+            st.error("Catalog empty")
+            st.stop()
+        if "cons_key" not in st.session_state:
+            st.session_state.cons_key = series[0]
         idx = series.index(st.session_state.cons_key) if st.session_state.cons_key in series else 0
         st.session_state.cons_key = st.selectbox("Select Consumption Series (API)", series, index=idx)
         d_start, d_end = api_defaults
     except Exception as e:
-        st.error(f"API Error: {e}"); st.stop()
+        st.error(f"API Error: {e}")
+        st.stop()
 else:
     files = [str(p) for p in DEFAULTS if p.exists()]
     cons_path = st.selectbox("Consumption CSV", options=files or ["<missing>"])
-    if cons_path == "<missing>": st.warning("No CSVs found"); st.stop()
+    if cons_path == "<missing>":
+        st.warning("No CSVs found")
+        st.stop()
     cons_df_full = load_cons_csv(cons_path)
     d_start = cons_df_full.index.min().date()
     d_end = min(cons_df_full.index.min().date() + pd.Timedelta(days=7), cons_df_full.index.max().date())
 
 left, right = st.columns(2)
-with left: start = st.date_input("Start", value=d_start)
-with right: end = st.date_input("End", value=d_end)
+with left:
+    start = st.date_input("Start", value=d_start)
+with right:
+    end = st.date_input("End", value=d_end)
 
 if use_api:
     try:
         sel = cons_range_api(api_base, st.session_state.cons_key, pd.Timestamp(start).isoformat(), (pd.Timestamp(end)+pd.Timedelta(days=1)).isoformat())
-    except Exception as e: st.error(str(e)); st.stop()
+    except Exception as e:
+        st.error(str(e))
+        st.stop()
 else:
     sel = cons_df_full.loc[pd.Timestamp(start, tz="UTC"):pd.Timestamp(end, tz="UTC")+pd.Timedelta(days=1)]
 
 chart, stats, preview = st.tabs(["Chart", "Stats", "Preview"])
-with chart: st.line_chart(sel.rename(columns={"consumption_kwh": "kWh"}))
-with stats: st.dataframe(sel.describe())
-with preview: st.dataframe(sel.head(48))
+with chart:
+    st.line_chart(sel.rename(columns={"consumption_kwh": "kWh"}))
+with stats:
+    st.dataframe(sel.describe())
+with preview:
+    st.dataframe(sel.head(48))
 

@@ -8,7 +8,7 @@ Focus: High-level status, immediate flow, and key metrics.
 from __future__ import annotations
 import streamlit as st
 import requests
-import pandas as pd
+
 from streamlit_echarts import st_echarts
 
 st.set_page_config(page_title="Smart Energy Dashboard", layout="wide", page_icon="⚡")

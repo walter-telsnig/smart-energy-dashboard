@@ -12,7 +12,7 @@ import streamlit as st
 import pandas as pd
 from pathlib import Path
 import requests
-from typing import List, Tuple
+from typing import List
 
 st.set_page_config(layout="wide")
 

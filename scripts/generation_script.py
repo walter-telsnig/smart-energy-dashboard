@@ -72,7 +72,11 @@ def generate_dach_files_final():
             exp = max(net - chg, 0)
             imp = max(-net - dis, 0)
             
-            soc_l.append(soc); chg_l.append(chg); dis_l.append(dis); exp_l.append(exp); imp_l.append(imp)
+            soc_l.append(soc)
+            chg_l.append(chg)
+            dis_l.append(dis)
+            exp_l.append(exp)
+            imp_l.append(imp)
 
         cons_15['battery_soc_kwh'], cons_15['battery_charging_kwh'] = soc_l, chg_l
         cons_15['battery_discharging_kwh'] = dis_l
