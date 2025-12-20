@@ -174,9 +174,9 @@ def get_range(
     # Filter
     # We assume input start/end are comparable strings or ISO
     s = pd.to_datetime(start, utc=True)
-    e = pd.to_datetime(end, utc=True)
+    end_dt = pd.to_datetime(end, utc=True)
     
-    mask = (df["timestamp"] >= s) & (df["timestamp"] <= e)
+    mask = (df["timestamp"] >= s) & (df["timestamp"] <= end_dt)
     subset = df.loc[mask]
     
     rows = subset.to_dict(orient="records")

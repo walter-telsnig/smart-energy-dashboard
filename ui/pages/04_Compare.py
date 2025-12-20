@@ -118,8 +118,8 @@ with right:
     end = st.date_input("End", value=min(min_start + pd.Timedelta(days=7), max_end),
                         min_value=min_start, max_value=max_end)
 
-start_ts = pd.Timestamp(start, tz="UTC")
-end_ts = pd.Timestamp(end, tz="UTC") + pd.Timedelta(days=1)
+start_ts = pd.Timestamp(str(start), tz="UTC")
+end_ts = pd.Timestamp(str(end), tz="UTC") + pd.Timedelta(days=1)
 
 j = (
     pv.loc[start_ts:end_ts]

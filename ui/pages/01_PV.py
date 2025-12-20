@@ -175,8 +175,8 @@ with right:
     end = st.date_input("End", value=d_end)
 
 # Fetch Data
-start_ts_iso = pd.Timestamp(start).isoformat()
-end_ts_iso = (pd.Timestamp(end) + pd.Timedelta(days=1)).isoformat()
+start_ts_iso = pd.Timestamp(str(start)).isoformat()
+end_ts_iso = (pd.Timestamp(str(end)) + pd.Timedelta(days=1)).isoformat()
 
 if use_api:
     try:
@@ -185,8 +185,8 @@ if use_api:
         st.error(f"API Fetch Failed: {e}")
         st.stop()
 else:
-    start_ts = pd.Timestamp(start, tz="UTC")
-    end_ts = pd.Timestamp(end, tz="UTC") + pd.Timedelta(days=1)
+    start_ts = pd.Timestamp(str(start), tz="UTC")
+    end_ts = pd.Timestamp(str(end), tz="UTC") + pd.Timedelta(days=1)
     if pv_df_full is not None:
         pv_sel = pv_df_full.loc[start_ts:end_ts]
     else:

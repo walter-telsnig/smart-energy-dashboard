@@ -1,8 +1,8 @@
 # core/security.py
 from datetime import datetime, timedelta, timezone
 from typing import Any
-from jose import jwt
-from passlib.context import CryptContext
+from jose import jwt, JWTError  # type: ignore
+from passlib.context import CryptContext  # type: ignore
 
 # Configuration (Constants for now, could be in settings)
 SECRET_KEY = "CHANGE_THIS_IN_PRODUCTION_TO_A_REAL_SECRET_KEY"

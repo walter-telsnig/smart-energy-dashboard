@@ -9,7 +9,7 @@ from __future__ import annotations
 import streamlit as st
 import requests
 
-from streamlit_echarts import st_echarts
+from streamlit_echarts import st_echarts  # type: ignore
 
 st.set_page_config(page_title="Smart Energy Dashboard", layout="wide", page_icon="⚡")
 
@@ -75,7 +75,7 @@ try:
         if data:
             row = data[0]
             metrics["pv"] = float(row.get("pv_kwh", 0))
-            metrics["load"] = float(row.get("load_kwh", 0))
+            metrics["load"] = float(row.get("load_kwh", 0)) # type: ignore
             metrics["price"] = float(row.get("price_eur_kwh", 0))
             # Mock battery state since backend doesn't have live state persistence yet
             metrics["battery_flow"] = metrics["pv"] * 0.2 if mode == "Green Mode 🌿" else 0
@@ -98,7 +98,7 @@ with col2:
     st.metric("Battery Status", f"{metrics['battery_soc']} %", delta=bat_delta)
 with col3:
     color = "inverse" if net_cost > 0 else "normal" # inverse: red if cost > 0
-    st.metric("Live Net Cost", f"{net_cost:.2f} €", delta="Spending" if net_cost > 0 else "Earning", delta_color=color)
+    st.metric("Live Net Cost", f"{net_cost:.2f} €", delta="Spending" if net_cost > 0 else "Earning", delta_color=color)  # type: ignore
 
 # 3. Energy Flow Visualization (Sankey)
 st.subheader("Energy Flow")

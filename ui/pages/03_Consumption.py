@@ -96,12 +96,15 @@ with right:
 
 if use_api:
     try:
-        sel = cons_range_api(api_base, st.session_state.cons_key, pd.Timestamp(start).isoformat(), (pd.Timestamp(end)+pd.Timedelta(days=1)).isoformat())
+        sel = cons_range_api(api_base, st.session_state.cons_key, pd.Timestamp(str(start)).isoformat(), (pd.Timestamp(str(end))+pd.Timedelta(days=1)).isoformat())
     except Exception as e:
         st.error(str(e))
         st.stop()
 else:
-    sel = cons_df_full.loc[pd.Timestamp(start, tz="UTC"):pd.Timestamp(end, tz="UTC")+pd.Timedelta(days=1)]
+    if cons_df_full is not None:
+        sel = cons_df_full.loc[pd.Timestamp(str(start), tz="UTC"):pd.Timestamp(str(end), tz="UTC")+pd.Timedelta(days=1)]
+    else:
+        sel = pd.DataFrame()
 
 chart, stats, preview = st.tabs(["Chart", "Stats", "Preview"])
 with chart:

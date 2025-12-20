@@ -34,5 +34,5 @@ def downgrade() -> None:
     sa.Column('created_at', sa.DATETIME(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_index('ix_users_email', 'users', ['email'], unique=1)
+    op.create_index('ix_users_email', 'users', ['email'], unique=True)
     # ### end Alembic commands ###
