@@ -1,0 +1,38 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "API (Uvicorn, factory)",
+            "type": "python",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "app.main:create_app",
+                "--factory",
+                "--reload",
+                "--port",
+                "8000"
+            ],
+            "env": {
+                "PYTHONPATH": "."
+            },
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "UI (Streamlit)",
+            "type": "python",
+            "request": "launch",
+            "module": "streamlit",
+            "args": [
+                "run",
+                "ui/app.py"
+            ],
+            "env": {
+                "API_BASE": "http://localhost:8000/api/v1"
+            },
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}

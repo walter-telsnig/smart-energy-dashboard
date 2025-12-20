@@ -32,6 +32,6 @@ def create_app() -> FastAPI:
 
 
 # Dev/CI convenience: ensure tables exist for tests
-Base.metadata.create_all(bind=engine)
+# Base.metadata.create_all(bind=engine)
 
 app = create_app()
