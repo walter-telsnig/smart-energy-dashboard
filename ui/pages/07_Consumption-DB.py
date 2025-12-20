@@ -42,4 +42,8 @@ with chart:
 with stats:
     st.dataframe(df.describe().drop("std"))
 with preview:
-    st.dataframe(df.head(preview_amount))
+    st.write("Number of Results: " + str(len(df.index)))
+    if(preview_amount<=len(df.index)):
+        st.dataframe(df.head(preview_amount))
+    else:
+        st.dataframe(df.head(len(df.index)))
