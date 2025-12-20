@@ -11,7 +11,7 @@ import pandas as pd
 from pathlib import Path
 
 st.set_page_config(layout="wide")
-st.title("🏠 Household Consumption")
+st.title("🏠 Household Consumption - CSV Version")
 
 DATA_DIR = Path("infra/data/consumption")
 DEFAULTS = [
