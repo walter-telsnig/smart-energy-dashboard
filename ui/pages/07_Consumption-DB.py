@@ -31,6 +31,7 @@ response = requests.get(
 #--Check Status--
 #st.write("Status:", response.status_code)
 #st.write("Raw response:", response.text)
+preview_amount = st.number_input("preview_amount",value=48)
 
 df = pd.DataFrame(response.json(), columns=["datetime", "consumption_kwh"])
 df["datetime"] = pd.to_datetime(df["datetime"])
@@ -41,4 +42,4 @@ with chart:
 with stats:
     st.dataframe(df.describe().drop("std"))
 with preview:
-    st.dataframe(df.head(48))
+    st.dataframe(df.head(preview_amount))
