@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     api_prefix: str = "/api/v1"
     env: str = "dev"
 
+    demo_password: str = "changeme"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_prefix="SED_",         # e.g. SED_DB_URL

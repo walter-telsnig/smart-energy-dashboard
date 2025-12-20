@@ -11,6 +11,22 @@ import pandas as pd
 from pathlib import Path
 
 st.set_page_config(layout="wide")
+import importlib.util
+from pathlib import Path
+
+def _load_auth():
+    auth_path = Path(__file__).resolve().parents[1] / "auth.py"  # ui/auth.py
+    spec = importlib.util.spec_from_file_location("auth", auth_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Could not load auth module from {auth_path}")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+auth = _load_auth()
+auth.require_login()
+auth.logout_button()
+
 st.title("💶 Electricity Prices (EPEX AT)")
 
 DATA_DIR = Path("infra/data/market")

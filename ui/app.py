@@ -24,6 +24,24 @@ import pandas as pd
 
 st.set_page_config(page_title="Smart Energy Dashboard", layout="wide")
 
+import importlib.util
+
+def _load_auth():
+    auth_path = Path(__file__).resolve().parent / "auth.py"  # ui/auth.py
+    spec = importlib.util.spec_from_file_location("auth", auth_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Could not load auth module from {auth_path}")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+auth = _load_auth()
+# st.write("AUTH FILE:", getattr(auth, "__file__", "no file"))
+# st.write("AUTH EXPORTS:", [x for x in dir(auth) if "logout" in x or "login" in x])
+
+auth.require_login()
+auth.logout_button()
+
 st.title("🔆 Smart Energy Dashboard")
 st.caption("PV • Prices • Consumption • Battery Simulation")
 
