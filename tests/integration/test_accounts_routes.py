@@ -10,7 +10,7 @@ def setup_module(_):
 
 def test_crud_flow():
     # Create
-    r = client.post("/api/v1/accounts/", json={"email": "bob@example.com", "full_name": "Bob"})
+    r = client.post("/api/v1/accounts/", json={"email": "bob@example.com", "full_name": "Bob", "password": "securepassword123"})
     assert r.status_code == 201
     uid = r.json()["id"]
 
