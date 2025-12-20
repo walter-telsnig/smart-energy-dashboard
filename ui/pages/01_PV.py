@@ -15,6 +15,10 @@ import requests
 from typing import List, Tuple
 
 st.set_page_config(layout="wide")
+
+if "token" not in st.session_state or st.session_state["token"] is None:
+    st.warning("Please log in to access this page.")
+    st.stop()
 st.title("☀️ PV Production")
 
 DATA_DIR = Path("infra/data/pv")
@@ -25,8 +29,8 @@ DEFAULTS = [
 ]
 
 use_api = st.toggle(
-    "Use FastAPI endpoints instead of CSV",
-    value=False,
+    "Use FastAPI endpoints (Default)",
+    value=True,
     help="/api/v1/pv/... must be running on localhost:8000",
 )
 api_base = st.text_input("API base", value="http://localhost:8000", disabled=not use_api)
@@ -85,86 +89,108 @@ def pv_catalog_api(base: str) -> List[str]:
     return []
 
 @st.cache_data(show_spinner=True)
-def pv_head_api(base: str, key: str, n: int) -> pd.DataFrame:
+def pv_range_api(base: str, key: str, start: str, end: str) -> pd.DataFrame:
     """
-    GET /api/v1/pv/head?key=<key>&n=<n>
-    Expects:
-      {"key":"...", "count": n, "rows":[{"timestamp":"...", "value": ...}, ...]}
+    GET /api/v1/pv/range?key=...&start=...&end=...
     """
     if not key:
-        raise ValueError("No PV series key selected.")
-    url = f"{base}/api/v1/pv/head"
-    # Use a typed list of tuples to please mypy/requests typing
-    params: List[Tuple[str, str]] = [("key", key), ("n", str(int(n)))]
+        return pd.DataFrame()
+    
+    url = f"{base}/api/v1/pv/range"
+    params = [("key", key), ("start", start), ("end", end)]
+    
     r = requests.get(url, params=params, timeout=15)
     r.raise_for_status()
     data = r.json()
-    rows = data.get("rows", data)
+    rows = data.get("rows", [])
     df = pd.DataFrame(rows)
 
-    # Accept both 'timestamp' and 'datetime'
+    if df.empty:
+        return df
+
+    # Normalize columns
     if "datetime" in df.columns:
         ts_col = "datetime"
     elif "timestamp" in df.columns:
         ts_col = "timestamp"
     else:
-        raise KeyError(f"API response missing 'timestamp'/'datetime' field: {df.columns.tolist()}")
+        # Fallback if empty or malformed
+        return df
 
-    # Accept 'value' or 'production_kwh' or convert 'production_kw' -> kWh
+    # Value column mapping
     if "value" in df.columns:
         val_col = "value"
     elif "production_kwh" in df.columns:
         val_col = "production_kwh"
-    elif "production_kw" in df.columns:
-        df["production_kwh"] = pd.to_numeric(df["production_kw"], errors="coerce").astype("float64") * 1.0
-        val_col = "production_kwh"
     else:
-        raise KeyError(f"API response missing 'value'/'production_kwh' field: {df.columns.tolist()}")
+        # Check for numeric fallback
+        num = [c for c in df.columns if c != ts_col and pd.api.types.is_numeric_dtype(df[c])]
+        val_col = num[0] if num else df.columns[-1]
 
     df[ts_col] = pd.to_datetime(df[ts_col], utc=True)
     df = df.rename(columns={ts_col: "datetime", val_col: "production_kwh"})
     return df.set_index("datetime")[["production_kwh"]].sort_index()
 
+# --- Main Logic ---
+
+pv_df_full = None  # Setup for CSV mode
+api_defaults = (pd.date_range("2025-01-01", periods=1).date[0], pd.date_range("2025-01-07", periods=1).date[0])
+
 if use_api:
     try:
         series = pv_catalog_api(api_base)
         if not series:
-            st.error("Catalog is empty or unrecognized. Check /api/v1/pv/catalog response.")
+            st.error("Catalog is empty.")
             st.stop()
 
-        # Keep selection stable across reruns
         if "pv_key" not in st.session_state:
             st.session_state.pv_key = series[0]
 
-        default_idx = series.index(st.session_state.pv_key) if st.session_state.pv_key in series else 0
-        st.session_state.pv_key = st.selectbox("Select PV series (API)", options=series, index=default_idx)
-
-        n = st.slider("Initial rows to preview", 24, 24*30, 24*7, step=24)
-        pv = pv_head_api(api_base, st.session_state.pv_key, n)
-    except requests.HTTPError as http_err:
-        st.error(f"API error: {http_err}")
-        st.stop()
+        idx = series.index(st.session_state.pv_key) if st.session_state.pv_key in series else 0
+        st.session_state.pv_key = st.selectbox("Select PV series (API)", options=series, index=idx)
+        
+        # API Defaults
+        d_start, d_end = api_defaults
     except Exception as e:
-        st.error(f"Error: {e}")
+        st.error(f"API Error: {e}")
         st.stop()
 else:
     files = [str(p) for p in DEFAULTS if p.exists()]
     pv_path = st.selectbox("PV CSV", options=files or ["<missing>"])
     if pv_path == "<missing>":
-        st.warning("No PV CSVs found in infra/data/pv")
+        st.warning("No PV CSVs found")
         st.stop()
-    pv = load_csv(pv_path)
+    pv_df_full = load_csv(pv_path)
+    if not pv_df_full.empty:
+        d_start = pv_df_full.index.min().date()
+        d_end = min(pv_df_full.index.min().date() + pd.Timedelta(days=7), pv_df_full.index.max().date())
+    else:
+        d_start, d_end = api_defaults
 
-# Date selection
+# Date Selection
 left, right = st.columns(2)
 with left:
-    start = st.date_input("Start", value=pv.index.min().date())
+    start = st.date_input("Start", value=d_start)
 with right:
-    end = st.date_input("End", value=min(pv.index.min().date() + pd.Timedelta(days=7), pv.index.max().date()))
+    end = st.date_input("End", value=d_end)
 
-start_ts = pd.Timestamp(start, tz="UTC")
-end_ts = pd.Timestamp(end, tz="UTC") + pd.Timedelta(days=1)
-pv_sel = pv.loc[start_ts:end_ts]
+# Fetch Data
+start_ts_iso = pd.Timestamp(start).isoformat()
+end_ts_iso = (pd.Timestamp(end) + pd.Timedelta(days=1)).isoformat()
+
+if use_api:
+    try:
+        pv_sel = pv_range_api(api_base, st.session_state.pv_key, start_ts_iso, end_ts_iso)
+    except Exception as e:
+        st.error(f"API Fetch Failed: {e}")
+        st.stop()
+else:
+    start_ts = pd.Timestamp(start, tz="UTC")
+    end_ts = pd.Timestamp(end, tz="UTC") + pd.Timedelta(days=1)
+    if pv_df_full is not None:
+        pv_sel = pv_df_full.loc[start_ts:end_ts]
+    else:
+        pv_sel = pd.DataFrame()
 
 chart, stats, preview = st.tabs(["Chart", "Stats", "Preview"])
 with chart:

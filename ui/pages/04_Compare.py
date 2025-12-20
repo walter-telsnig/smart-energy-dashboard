@@ -11,6 +11,10 @@ import pandas as pd
 from pathlib import Path
 
 st.set_page_config(layout="wide")
+
+if "token" not in st.session_state or st.session_state["token"] is None:
+    st.warning("Please log in to access this page.")
+    st.stop()
 st.title("📊 Compare — PV vs. Consumption vs. Prices")
 
 PV_PATH = Path("infra/data/pv/pv_2025_hourly.csv")

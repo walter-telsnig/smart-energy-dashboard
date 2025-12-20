@@ -11,7 +11,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from core.settings import settings
 from infra.db import Base
-import infra.accounts.orm  # noqa: F401  (registers UserORM on Base)
+# import infra.accounts.orm  # noqa: F401  (registers UserORM on Base)
+import modules.accounts.model  # noqa: F401 (registers Account on Base)
 
 # Alembic Config
 config = context.config
