@@ -88,6 +88,23 @@ streamlit run ui/app.py
 ```
 - **Dashboard:** [http://localhost:8501](http://localhost:8501)
 
+### 🔐 Authentication & Users
+
+The application uses **JWT Authentication**. You must log in to access the dashboard.
+
+**Default Login:**
+There are no default users. You must create one.
+
+**Creating a User:**
+Use the helper script to generate a new user account:
+```powershell
+python scripts/create_user.py <email> <password> "<Full Name>"
+```
+*Example:*
+```powershell
+python scripts/create_user.py admin@example.com secret123 "Admin User"
+```
+
 ### Running Tests
 Execute the test suite using Pytest.
 ```powershell
