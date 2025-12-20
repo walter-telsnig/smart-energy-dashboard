@@ -1,7 +1,7 @@
 # core/security.py
 from datetime import datetime, timedelta, timezone
 from typing import Any
-from jose import jwt, JWTError  # type: ignore
+from jose import jwt  # type: ignore
 from passlib.context import CryptContext  # type: ignore
 
 # Configuration (Constants for now, could be in settings)
