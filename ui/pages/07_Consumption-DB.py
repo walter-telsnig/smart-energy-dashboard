@@ -38,3 +38,7 @@ df["datetime"] = pd.to_datetime(df["datetime"])
 chart, stats, preview = st.tabs(["Charts", "Stats", "Preview"])
 with chart:
     st.line_chart(df.set_index("datetime")["consumption_kwh"])
+with stats:
+    st.dataframe(df.describe().drop("std"))
+with preview:
+    st.dataframe(df.head(48))
