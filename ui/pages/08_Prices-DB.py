@@ -44,7 +44,7 @@ chart, stats, preview = st.tabs(["Charts", "Stats", "Preview"])
 with chart:
     st.line_chart(df.set_index("datetime")["price_eur_mwh"])
 with stats:
-    st.dataframe(df.describe().drop("std"))
+    st.dataframe(df["datetime"].describe())
 with preview:
     st.write("Number of Results: " + str(len(df.index)))
     if(preview_amount<=len(df.index)):
