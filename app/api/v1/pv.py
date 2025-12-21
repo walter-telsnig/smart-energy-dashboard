@@ -147,3 +147,37 @@ def full_series(
     df = _normalize_to_timestamp_value(df)
     rows = df.head(limit).to_dict(orient="records")
     return {"key": Path(csv_path).stem, "count": len(rows), "rows": rows}
+
+
+@router.get("/range", response_model=dict)
+def get_range(
+    key: str = Query(..., description="CSV key (with or without .csv)"),
+    start: str = Query(..., description="Start ISO datetime"),
+    end: str = Query(..., description="End ISO datetime"),
+) -> Dict:
+    """
+    Return rows within [start, end] (inclusive).
+    """
+    csv_path = _csv_path_for_key(key)
+    try:
+        df = pd.read_csv(csv_path)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"cannot read CSV '{csv_path.name}': {e}")
+
+    df = _normalize_to_timestamp_value(df)
+    
+    # Ensure pandas timestamp for filtering
+    # Convert to UTC-aware if possible or just standard datetime64
+    if not pd.api.types.is_datetime64_any_dtype(df["timestamp"]):
+        df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True)
+    
+    # Filter
+    # We assume input start/end are comparable strings or ISO
+    s = pd.to_datetime(start, utc=True)
+    end_dt = pd.to_datetime(end, utc=True)
+    
+    mask = (df["timestamp"] >= s) & (df["timestamp"] <= end_dt)
+    subset = df.loc[mask]
+    
+    rows = subset.to_dict(orient="records")
+    return {"key": Path(csv_path).stem, "count": len(rows), "rows": rows}

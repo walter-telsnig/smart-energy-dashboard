@@ -10,8 +10,9 @@ from app.api.v1.consumption import router as consumption_router
 from app.api.dataManagement.consumption import router as consumption_router_db
 from app.api.v1.market import router as market_router
 from app.api.v1.battery import router as battery_router
+from app.api.v1.auth import router as auth_router
 
-from infra.db import Base, engine
+
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Smart Energy Dashboard API", version="0.1.0")
@@ -21,6 +22,7 @@ def create_app() -> FastAPI:
         return {"status": "ok"}
 
     app.include_router(accounts_router, prefix="/api/v1")
+    app.include_router(auth_router, prefix="/api/v1")
     app.include_router(pv_router, prefix="/api/v1")
     app.include_router(timeseries_router, prefix="/api/v1")
     app.include_router(forecast_router, prefix="/api/v1")
@@ -34,6 +36,6 @@ def create_app() -> FastAPI:
 
 
 # Dev/CI convenience: ensure tables exist for tests
-Base.metadata.create_all(bind=engine)
+# Base.metadata.create_all(bind=engine)
 
 app = create_app()

@@ -100,9 +100,9 @@ def generate_recommendations(
         score = 0.30
 
         if battery_enabled and sim_out is not None:
-            ch = float(sim_out["charge_kwh"].iat[i])
-            dch = float(sim_out["discharge_kwh"].iat[i])
-            soc = float(sim_out["soc_kwh"].iat[i])
+            ch = float(str(sim_out["charge_kwh"].iat[i]))
+            dch = float(str(sim_out["discharge_kwh"].iat[i]))
+            soc = float(str(sim_out["soc_kwh"].iat[i]))
 
             if ch > 0.01:
                 action = "charge"

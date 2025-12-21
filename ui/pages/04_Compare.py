@@ -11,6 +11,10 @@ import pandas as pd
 from pathlib import Path
 
 st.set_page_config(layout="wide")
+
+if "token" not in st.session_state or st.session_state["token"] is None:
+    st.warning("Please log in to access this page.")
+    st.stop()
 st.title("📊 Compare — PV vs. Consumption vs. Prices")
 
 PV_PATH = Path("infra/data/pv/pv_2025_hourly.csv")
@@ -114,8 +118,8 @@ with right:
     end = st.date_input("End", value=min(min_start + pd.Timedelta(days=7), max_end),
                         min_value=min_start, max_value=max_end)
 
-start_ts = pd.Timestamp(start, tz="UTC")
-end_ts = pd.Timestamp(end, tz="UTC") + pd.Timedelta(days=1)
+start_ts = pd.Timestamp(str(start), tz="UTC")
+end_ts = pd.Timestamp(str(end), tz="UTC") + pd.Timedelta(days=1)
 
 j = (
     pv.loc[start_ts:end_ts]

@@ -9,6 +9,10 @@ API_BASE = "http://localhost:8000/api/v1"
 
 st.set_page_config(page_title="Energy Recommendations", layout="wide")
 
+if "token" not in st.session_state or st.session_state["token"] is None:
+    st.warning("Please log in to access this page.")
+    st.stop()
+
 # ---------------- Sidebar ----------------
 with st.sidebar:
     st.header("Planning")

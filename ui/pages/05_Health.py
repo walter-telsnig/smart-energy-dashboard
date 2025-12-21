@@ -16,6 +16,10 @@ import requests
 from typing import List, Tuple
 
 st.set_page_config(layout="wide")
+
+if "token" not in st.session_state or st.session_state["token"] is None:
+    st.warning("Please log in to access this page.")
+    st.stop()
 st.title("🩺 Health Check")
 
 # --- Filesystem checks (use Path objects here) ---
