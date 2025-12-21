@@ -47,7 +47,7 @@ with chart_temp:
     st.write("Line Chart - Cloud coverage in %")
     st.line_chart(df.set_index("datetime")["cloud_cover_pct"])
 with stats:
-    st.dataframe(df["datetime"].describe())
+    st.dataframe(df.iloc[:,1:].describe())
 with preview:
     st.write("Number of Results: " + str(len(df.index)))
     if(preview_amount<=len(df.index)):

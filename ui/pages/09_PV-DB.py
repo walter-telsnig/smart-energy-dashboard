@@ -44,7 +44,7 @@ chart, stats, preview = st.tabs(["Charts", "Stats", "Preview"])
 with chart:
     st.line_chart(df.set_index("datetime")["production_kw"])
 with stats:
-    st.dataframe(df["datetime"].describe())
+    st.dataframe(df["production_kw"].describe())
 with preview:
     st.write("Number of Results: " + str(len(df.index)))
     if(preview_amount<=len(df.index)):
