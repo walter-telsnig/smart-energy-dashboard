@@ -7,6 +7,10 @@ from datetime import datetime
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
 st.set_page_config(layout="wide")
+
+if "token" not in st.session_state or st.session_state["token"] is None:
+    st.warning("Please log in to access this page.")
+    st.stop()
 st.title("🏠 Household Consumption - Database Version")
 
 now = datetime.now()
@@ -34,7 +38,7 @@ response = requests.get(
 preview_amount = st.number_input("preview_amount",value=48)
 
 df = pd.DataFrame(response.json(), columns=["datetime", "consumption_kwh"])
-df["datetime"] = pd.to_datetime(df["datetime"])
+df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce").astype("int64")
 
 chart, stats, preview = st.tabs(["Charts", "Stats", "Preview"])
 with chart:

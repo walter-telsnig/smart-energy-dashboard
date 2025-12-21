@@ -1,5 +1,4 @@
 #consumption.py
-#TODO: Implement it in main
 
 from pydantic import BaseModel
 from datetime import datetime
