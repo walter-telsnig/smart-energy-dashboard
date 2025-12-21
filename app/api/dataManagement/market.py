@@ -6,7 +6,7 @@ import psycopg2
 import psycopg2.extras
 from fastapi import APIRouter, HTTPException, Query
 
-router = APIRouter(prefix="/price-db" ,tags=["consumption"])
+router = APIRouter(prefix="/price-db" ,tags=["pv"])
 
 conn = psycopg2.connect(
     dbname="pv-db", user="postgres", password="ppswy2026", host="localhost"
