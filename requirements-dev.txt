@@ -4,3 +4,5 @@ pandas-stubs
 types-requests
 pytest
 ruff
+psycopg2-binary
+types-psycopg2
