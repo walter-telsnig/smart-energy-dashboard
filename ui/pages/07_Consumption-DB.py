@@ -38,7 +38,7 @@ response = requests.get(
 preview_amount = st.number_input("preview_amount",value=48)
 
 df = pd.DataFrame(response.json(), columns=["datetime", "consumption_kwh"])
-df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce").astype("int64")
+df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
 
 chart, stats, preview = st.tabs(["Charts", "Stats", "Preview"])
 with chart:

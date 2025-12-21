@@ -2,7 +2,6 @@
 
 from pydantic import BaseModel
 from datetime import datetime
-from pandas import DataFrame
 import psycopg2
 import psycopg2.extras
 from fastapi import APIRouter, HTTPException, Query
@@ -23,7 +22,7 @@ class ConsumptionData(BaseModel):
 @router.post("/add")
 def create_data(data: ConsumptionData):
     cursor.execute(
-        "INSERT INTO consumption (datetime, consumption_kwh) VALUES (%s,%s,%s,%s)",
+        "INSERT INTO consumption (datetime, consumption_kwh) VALUES (%s,%s)",
         (data.datetime, data.consumption_kwh)
     )
     conn.commit()
