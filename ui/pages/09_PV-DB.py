@@ -13,6 +13,9 @@ if "token" not in st.session_state or st.session_state["token"] is None:
     st.stop()
 st.title("☀️ PV Production - DB Version")
 
+option = st.selectbox("15 Minute/Hourly", ("15 Minute", "Hourly"))
+st.write("You selected:", option)
+
 now = datetime.now()
 
 left, right = st.columns(2)
@@ -24,18 +27,28 @@ with right:
 start_ts = pd.Timestamp(start, tz="UTC")
 end_ts = pd.Timestamp(end, tz="UTC") + pd.Timedelta(days=1)
 
-response = requests.get(
-    f"{API_BASE_URL}/api/dataManagment/pv-db",
-    params={
-        "start": start_ts,
-        "end": end_ts
-    }
-)
+preview_amount = st.number_input("preview_amount",value=48)
+
+if(option == "15 Minute"):
+        response = requests.get(
+        f"{API_BASE_URL}/api/dataManagment/pv_minute-db",
+        params={
+            "start": start_ts,
+            "end": end_ts
+        }
+    )
+elif(option == "Hourly"):
+    response = requests.get(
+        f"{API_BASE_URL}/api/dataManagment/pv-db",
+        params={
+            "start": start_ts,
+            "end": end_ts
+        }
+    )
 
 #--Check Status--
 #st.write("Status:", response.status_code)
 #st.write("Raw response:", response.text)
-preview_amount = st.number_input("preview_amount",value=48)
 
 df = pd.DataFrame(response.json(), columns=["datetime", "production_kw"])
 df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")

@@ -1,0 +1,39 @@
+#pv.py
+
+from pydantic import BaseModel
+from datetime import datetime
+import psycopg2
+import psycopg2.extras
+from fastapi import APIRouter, HTTPException, Query
+
+router = APIRouter(prefix="/pv_minute-db" ,tags=["pv"])
+
+conn = psycopg2.connect(
+    dbname="pv-db", user="postgres", password="ppswy2026", host="localhost"
+)
+
+cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+class PVData(BaseModel):
+    datetime: datetime
+    production_kw: float
+
+#TODO: create functions for create, get, update and delete
+@router.post("/add")
+def create_data(data: PVData):
+    cursor.execute(
+        "INSERT INTO pv_minute (datetime, production_kw) VALUES (%s,%s)",
+        (data.datetime, data.production_kw)
+    )
+    conn.commit()
+    return{"status": "success"}
+
+@router.get("")
+def get_data(start: datetime, end: datetime):
+    cursor.execute(
+        "SELECT datetime, production_kw FROM pv_minute "
+        "WHERE datetime >= %s AND datetime <= %s ORDER BY datetime",
+        (start, end)
+    )
+    rows = cursor.fetchall()
+    return rows
