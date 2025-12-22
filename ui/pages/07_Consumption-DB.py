@@ -2,7 +2,7 @@ import os
 import streamlit as st
 import requests
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
@@ -15,6 +15,31 @@ st.title("🏠 Household Consumption - Database Version")
 
 option = st.selectbox("15 Minute/Hourly", ("15 Minute", "Hourly"))
 st.write("You selected:", option)
+
+#TODO: Find a solution for minutes and finish it
+with st.expander("Add Data"):
+    date = st.date_input("Date:")
+    if(option == "15 Minute"):
+        time = st.time_input("Time:", value="00:00", step=timedelta(minutes=15))
+    elif(option == "Hourly"):
+        time = st.time_input("Time:", value="00:00", step=timedelta(hours=1))
+    consumption_kwh = st.number_input("Kilowatt per Hour:")
+    if st.button("Confirm"):
+        if(option == "15 Minute"):
+            response = requests.post(
+                f"{API_BASE_URL}/api/dataManagment/consumption_minute-db",
+                params={
+
+                }
+            )
+        elif(option == "Hourly"):
+            response = requests.post(
+                f"{API_BASE_URL}/api/dataManagment/consumption-db",
+                params={
+
+                }
+            )
+
 
 now = datetime.now()
 
@@ -37,8 +62,11 @@ if(option == "15 Minute"):
             "end": end_ts
         }
     )
-    df = pd.DataFrame(response.json(), columns=["datetime", "consumption_kwh", "household_general_kwh", "heat_pump_kwh", "ev_load_kwh", "household_base_kwh", "total_consumption_kwh", "battery_soc_kwh", "battery_charging_kwh", "battery_discharging_kwh", "grid_export_kwh", "grid_import_kwh"])
-    df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
+    if response.status_code == 200:
+        df = pd.DataFrame(response.json(), columns=["datetime", "consumption_kwh", "household_general_kwh", "heat_pump_kwh", "ev_load_kwh", "household_base_kwh", "total_consumption_kwh", "battery_soc_kwh", "battery_charging_kwh", "battery_discharging_kwh", "grid_export_kwh", "grid_import_kwh"])
+        df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
+    else: 
+        st.write("No Data")
 elif(option == "Hourly"):
     response = requests.get(
         f"{API_BASE_URL}/api/dataManagment/consumption-db",
@@ -47,9 +75,11 @@ elif(option == "Hourly"):
             "end": end_ts
         }
     )
-
-    df = pd.DataFrame(response.json(), columns=["datetime", "consumption_kwh"])
-    df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
+    if response.status_code == 200:
+        df = pd.DataFrame(response.json(), columns=["datetime", "consumption_kwh"])
+        df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
+    else:
+        st.write("No Data")
 
 #--Check Status--
 #st.write("Status:", response.status_code)

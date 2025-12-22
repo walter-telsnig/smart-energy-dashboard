@@ -19,11 +19,11 @@ class ConsumptionData(BaseModel):
     consumption_kwh: float
 
 #TODO: create functions for create, get, update and delete
-@router.post("/add")
-def create_data(data: ConsumptionData):
+@router.post("")
+def create_data(datetime: datetime, consumption_kwh: float):
     cursor.execute(
         "INSERT INTO consumption (datetime, consumption_kwh) VALUES (%s,%s)",
-        (data.datetime, data.consumption_kwh)
+        (datetime, consumption_kwh)
     )
     conn.commit()
     return{"status": "success"}
