@@ -6,7 +6,7 @@ import psycopg2
 import psycopg2.extras
 from fastapi import APIRouter, HTTPException, Query
 
-router = APIRouter(prefix="/price-db" ,tags=["price"])
+router = APIRouter(prefix="/price_minute-db" ,tags=["price"])
 
 conn = psycopg2.connect(
     dbname="pv-db", user="postgres", password="ppswy2026", host="localhost"
@@ -22,7 +22,7 @@ class MarketData(BaseModel):
 @router.post("/add")
 def create_data(data: MarketData):
     cursor.execute(
-        "INSERT INTO market (datetime, price_eur_mwh) VALUES (%s,%s)",
+        "INSERT INTO market_minute (datetime, price_eur_mwh) VALUES (%s,%s)",
         (data.datetime, data.price_eur_mwh)
     )
     conn.commit()
@@ -31,7 +31,7 @@ def create_data(data: MarketData):
 @router.get("")
 def get_data(start: datetime, end: datetime):
     cursor.execute(
-        "SELECT datetime, price_eur_mwh FROM market "
+        "SELECT datetime, price_eur_mwh FROM market_minute "
         "WHERE datetime >= %s AND datetime <= %s ORDER BY datetime",
         (start, end)
     )
