@@ -2,7 +2,8 @@ import os
 import streamlit as st
 import requests
 import pandas as pd
-from datetime import datetime
+import pytz
+from datetime import datetime, timedelta
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
@@ -15,6 +16,54 @@ st.title("💶 Electricity Prices (EPEX AT) - DB Version")
 
 option = st.selectbox("15 Minute/Hourly", ("15 Minute", "Hourly"))
 st.write("You selected:", option)
+
+if option == "15 Minute":
+    path = f"{API_BASE_URL}/api/dataManagment/price_minute-db"
+elif option == "Hourly":
+    path = f"{API_BASE_URL}/api/dataManagment/price-db"
+
+def existData(date: datetime):
+    response = requests.get(
+        path,
+        params={
+            "date_value": date
+        }
+    )
+    if response.status_code == 200:
+        if(len(response.json()) > 0):
+            return True
+        else:
+            return False
+    else:
+        return None    
+
+with st.expander("Add Data"):
+    date = st.date_input("Date:")
+    if(option == "15 Minute"):
+        time = st.time_input("Time:", value="00:00", step=timedelta(minutes=15))
+    elif(option == "Hourly"):
+        time = st.time_input("Time:", value="00:00", step=timedelta(hours=1))
+    price_eur_mwh = st.number_input("€-Price per Megawatt-hour:")
+    if st.button("Confirm"):
+        timestamp = datetime(date.year, date.month, date.day, time.hour, time.minute, time.second, tzinfo=pytz.UTC)
+        exists = existData(timestamp)
+        if exists is None:
+            st.write("Error")
+        elif not exists:
+            response = requests.post(
+                path+"/add",
+                params={
+                    "datetime": timestamp,
+                    "price_eur_mwh": price_eur_mwh
+                }
+            )
+            if response.status_code == 200:
+                st.write("Done")
+            else:
+                st.write("Error: " + response.status_code)
+        else:
+            st.write("Exists already")
+            
 
 now = datetime.now()
 
@@ -29,38 +78,32 @@ end_ts = pd.Timestamp(end, tz="UTC") + pd.Timedelta(days=1)
 
 preview_amount = st.number_input("preview_amount",value=48)
 
-if(option == "15 Minute"):
-    response = requests.get(
-        f"{API_BASE_URL}/api/dataManagment/price_minute-db",
+response = requests.get(
+        path+"/list",
         params={
             "start": start_ts,
             "end": end_ts
         }
     )
-elif(option == "Hourly"):
-    response = requests.get(
-        f"{API_BASE_URL}/api/dataManagment/price-db",
-        params={
-            "start": start_ts,
-            "end": end_ts
-        }
-    )
+
+if response.status_code == 200:
+    df = pd.DataFrame(response.json(), columns=["datetime", "price_eur_mwh"])
+    df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
+
+    chart, stats, preview = st.tabs(["Charts", "Stats", "Preview"])
+    with chart:
+        st.line_chart(df.set_index("datetime")["price_eur_mwh"])
+    with stats:
+        st.dataframe(df.iloc[:,1:].describe())
+    with preview:
+        st.write("Number of Results: " + str(len(df.index)))
+        if(preview_amount<=len(df.index)):
+            st.dataframe(df.head(preview_amount))
+        else:
+            st.dataframe(df.head(len(df.index)))
+else: 
+        st.write("No Data")
 
 #--Check Status--
 #st.write("Status:", response.status_code)
 #st.write("Raw response:", response.text)
-
-df = pd.DataFrame(response.json(), columns=["datetime", "price_eur_mwh"])
-df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
-
-chart, stats, preview = st.tabs(["Charts", "Stats", "Preview"])
-with chart:
-    st.line_chart(df.set_index("datetime")["price_eur_mwh"])
-with stats:
-    st.dataframe(df.iloc[:,1:].describe())
-with preview:
-    st.write("Number of Results: " + str(len(df.index)))
-    if(preview_amount<=len(df.index)):
-        st.dataframe(df.head(preview_amount))
-    else:
-        st.dataframe(df.head(len(df.index)))

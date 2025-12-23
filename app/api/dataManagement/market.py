@@ -20,20 +20,30 @@ class MarketData(BaseModel):
 
 #TODO: create functions for create, get, update and delete
 @router.post("/add")
-def create_data(data: MarketData):
+def create_data(datetime: datetime, price_eur_mwh: float):
     cursor.execute(
         "INSERT INTO market (datetime, price_eur_mwh) VALUES (%s,%s)",
-        (data.datetime, data.price_eur_mwh)
+        (datetime, price_eur_mwh)
     )
     conn.commit()
     return{"status": "success"}
 
-@router.get("")
+@router.get("/list")
 def get_data(start: datetime, end: datetime):
     cursor.execute(
         "SELECT datetime, price_eur_mwh FROM market "
         "WHERE datetime >= %s AND datetime <= %s ORDER BY datetime",
         (start, end)
+    )
+    rows = cursor.fetchall()
+    return rows
+
+@router.get("")
+def get_element(date_value: datetime):
+    cursor.execute(
+        "SELECT datetime, price_eur_mwh FROM market "
+        "WHERE datetime = %s",
+        (date_value,)
     )
     rows = cursor.fetchall()
     return rows
