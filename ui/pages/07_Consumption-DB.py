@@ -103,14 +103,7 @@ if response.status_code == 200:
     elif(option == "Hourly"):
         df = pd.DataFrame(response.json(), columns=["datetime", "consumption_kwh"])
         df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
-else: 
-        st.write("No Data")
-
-#--Check Status--
-#st.write("Status:", response.status_code)
-#st.write("Raw response:", response.text)
-
-if response.status_code == 200:
+        
     chart, stats, preview = st.tabs(["Charts", "Stats", "Preview"])
     with chart:
         st.line_chart(df.set_index("datetime")["consumption_kwh"])
@@ -122,3 +115,9 @@ if response.status_code == 200:
             st.dataframe(df.head(preview_amount))
         else:
             st.dataframe(df.head(len(df.index)))
+else: 
+        st.write("No Data")
+
+#--Check Status--
+#st.write("Status:", response.status_code)
+#st.write("Raw response:", response.text)
