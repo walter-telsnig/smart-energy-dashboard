@@ -1,4 +1,4 @@
-#pv.py
+#pv_minute.py
 
 from pydantic import BaseModel
 from datetime import datetime
@@ -20,20 +20,30 @@ class PVData(BaseModel):
 
 #TODO: create functions for create, get, update and delete
 @router.post("/add")
-def create_data(data: PVData):
+def create_data(datetime: datetime, production_kw: float):
     cursor.execute(
         "INSERT INTO pv_minute (datetime, production_kw) VALUES (%s,%s)",
-        (data.datetime, data.production_kw)
+        (datetime, production_kw)
     )
     conn.commit()
     return{"status": "success"}
 
-@router.get("")
+@router.get("/list")
 def get_data(start: datetime, end: datetime):
     cursor.execute(
         "SELECT datetime, production_kw FROM pv_minute "
         "WHERE datetime >= %s AND datetime <= %s ORDER BY datetime",
         (start, end)
+    )
+    rows = cursor.fetchall()
+    return rows
+
+@router.get("")
+def get_element(date_value: datetime):
+    cursor.execute(
+        "SELECT datetime, production_kw FROM pv_minute "
+        "WHERE datetime = %s",
+        (date_value,)
     )
     rows = cursor.fetchall()
     return rows
