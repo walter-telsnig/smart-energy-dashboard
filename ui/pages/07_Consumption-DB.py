@@ -42,24 +42,44 @@ with st.expander("Add Data"):
     date = st.date_input("Date:")
     if(option == "15 Minute"):
         time = st.time_input("Time:", value="00:00", step=timedelta(minutes=15))
+        household_general_kwh = st.number_input("Household General Kilowatt per Hour:")
+        heat_pump_kwh = st.number_input("Heatpump Kilowatt per Hour:")
+        ev_load_kwh = st.number_input("EV Load Kilowatt per Hour:")
+        household_base_kwh = st.number_input("Household Base Kilowatt per Hour:")
+        total_consumption_kwh = st.number_input("Total Consumption Kilowatt per Hour:")
+        battery_soc_kwh = st.number_input("Battery State of Charge Kilowatt per Hour:")
+        battery_charging_kwh = st.number_input("Battery Charging Kilowatt per Hour:")
+        battery_discharging_kwh = st.number_input("Battery Discharging Kilowatt per Hour:")
+        grid_export_kwh = st.number_input("Grid Export Kilowatt per Hour:")
+        grid_import_kwh = st.number_input("Grid Import Kilowatt per Hour:")
     elif(option == "Hourly"):
         time = st.time_input("Time:", value="00:00", step=timedelta(hours=1))
-    consumption_kwh = st.number_input("Kilowatt per Hour:")
+    consumption_kwh = st.number_input("Consumption Kilowatt per Hour:")
+    timestamp = datetime(date.year, date.month, date.day, time.hour, time.minute, time.second, tzinfo=pytz.UTC)
     if st.button("Confirm"):
-        if(option == "15 Minute"):
-            st.write("In Work")
-            #response = requests.post(
-             #   f"{API_BASE_URL}/api/dataManagment/consumption_minute-db",
-             #   params={
-
-              #  }
-            #)
-        elif(option == "Hourly"):
-            timestamp = datetime(date.year, date.month, date.day, time.hour, time.minute, time.second, tzinfo=pytz.UTC)
-            exists = existData(timestamp)
-            if exists is None:
-                st.write("Error")
-            elif not exists:
+        exists = existData(timestamp)
+        if exists is None:
+            st.write("Error")
+        elif not exists:
+            if(option == "15 Minute"):
+                response = requests.post(
+                    path+"/add",
+                    params={
+                        "datetime": timestamp,
+                        "consumption_kwh": consumption_kwh,
+                        "household_general_kwh": household_general_kwh,
+                        "heat_pump_kwh": heat_pump_kwh,
+                        "ev_load_kwh": ev_load_kwh,
+                        "household_base_kwh": household_base_kwh,
+                        "total_consumption_kwh": total_consumption_kwh,
+                        "battery_soc_kwh": battery_soc_kwh,
+                        "battery_charging_kwh": battery_charging_kwh,
+                        "battery_discharging_kwh": battery_discharging_kwh,
+                        "grid_export_kwh": grid_export_kwh,
+                        "grid_import_kwh": grid_import_kwh
+                    }
+                )
+            elif(option == "Hourly"):
                 response = requests.post(
                     path+"/add",
                     params={
@@ -67,12 +87,12 @@ with st.expander("Add Data"):
                         "consumption_kwh": consumption_kwh
                     }
                 )
-                if response.status_code == 200:
-                    st.write("Done")
-                else:
-                    st.write("Error: " + response.status_code)
+            if response.status_code == 200:
+                st.write("Done")
             else:
-                st.write("Exists already")
+                st.write("Error: " + response.status_code)
+        else:
+            st.write("Exists already")
 
 
 now = datetime.now()
@@ -103,7 +123,7 @@ if response.status_code == 200:
     elif(option == "Hourly"):
         df = pd.DataFrame(response.json(), columns=["datetime", "consumption_kwh"])
         df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
-        
+
     chart, stats, preview = st.tabs(["Charts", "Stats", "Preview"])
     with chart:
         st.line_chart(df.set_index("datetime")["consumption_kwh"])

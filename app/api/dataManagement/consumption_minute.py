@@ -44,18 +44,18 @@ def create_data(datetime: datetime,
     grid_import_kwh: float):
     cursor.execute(
         "INSERT INTO consumption_minute (datetime, consumption_kwh, household_general_kwh, heat_pump_kwh, ev_load_kwh, household_base_kwh, total_consumption_kwh, battery_soc_kwh, battery_charging_kwh, battery_discharging_kwh, grid_export_kwh, grid_import_kwh) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-        (data.datetime, 
-        data.consumption_kwh,
-        data.household_general_kwh,
-        data.heat_pump_kwh,
-        data.ev_load_kwh,
-        data.household_base_kwh,
-        data.total_consumption_kwh,
-        data.battery_soc_kwh,
-        data.battery_charging_kwh,
-        data.battery_discharging_kwh,
-        data.grid_export_kwh,
-        data.grid_import_kwh)
+        (datetime, 
+        consumption_kwh,
+        household_general_kwh,
+        heat_pump_kwh,
+        ev_load_kwh,
+        household_base_kwh,
+        total_consumption_kwh,
+        battery_soc_kwh,
+        battery_charging_kwh,
+        battery_discharging_kwh,
+        grid_export_kwh,
+        grid_import_kwh)
     )
     conn.commit()
     return{"status": "success"}
@@ -66,6 +66,16 @@ def get_data(start: datetime, end: datetime):
         "SELECT datetime, consumption_kwh, household_general_kwh, heat_pump_kwh, ev_load_kwh, household_base_kwh, total_consumption_kwh, battery_soc_kwh, battery_charging_kwh, battery_discharging_kwh, grid_export_kwh, grid_import_kwh FROM consumption_minute "
         "WHERE datetime >= %s AND datetime <= %s ORDER BY datetime",
         (start, end)
+    )
+    rows = cursor.fetchall()
+    return rows
+
+@router.get("")
+def get_element(date_value: datetime):
+    cursor.execute(
+        "SELECT datetime, consumption_kwh, household_general_kwh, heat_pump_kwh, ev_load_kwh, household_base_kwh, total_consumption_kwh, battery_soc_kwh, battery_charging_kwh, battery_discharging_kwh, grid_export_kwh, grid_import_kwh FROM consumption_minute "
+        "WHERE datetime = %s",
+        (date_value,)
     )
     rows = cursor.fetchall()
     return rows
