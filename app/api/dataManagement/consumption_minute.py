@@ -30,7 +30,18 @@ class ConsumptionMinuteData(BaseModel):
 
 #TODO: create functions for create, get, update and delete
 @router.post("/add")
-def create_data(data: ConsumptionMinuteData):
+def create_data(datetime: datetime,
+    consumption_kwh: float,
+    household_general_kwh: float,
+    heat_pump_kwh: float,
+    ev_load_kwh: float,
+    household_base_kwh: float,
+    total_consumption_kwh: float,
+    battery_soc_kwh: float,
+    battery_charging_kwh: float,
+    battery_discharging_kwh: float,
+    grid_export_kwh: float,
+    grid_import_kwh: float):
     cursor.execute(
         "INSERT INTO consumption_minute (datetime, consumption_kwh, household_general_kwh, heat_pump_kwh, ev_load_kwh, household_base_kwh, total_consumption_kwh, battery_soc_kwh, battery_charging_kwh, battery_discharging_kwh, grid_export_kwh, grid_import_kwh) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
         (data.datetime, 
@@ -49,7 +60,7 @@ def create_data(data: ConsumptionMinuteData):
     conn.commit()
     return{"status": "success"}
 
-@router.get("")
+@router.get("/list")
 def get_data(start: datetime, end: datetime):
     cursor.execute(
         "SELECT datetime, consumption_kwh, household_general_kwh, heat_pump_kwh, ev_load_kwh, household_base_kwh, total_consumption_kwh, battery_soc_kwh, battery_charging_kwh, battery_discharging_kwh, grid_export_kwh, grid_import_kwh FROM consumption_minute "

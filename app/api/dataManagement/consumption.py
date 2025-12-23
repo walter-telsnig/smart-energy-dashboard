@@ -19,7 +19,7 @@ class ConsumptionData(BaseModel):
     consumption_kwh: float
 
 #TODO: create functions for create, get, update and delete
-@router.post("")
+@router.post("/add")
 def create_data(datetime: datetime, consumption_kwh: float):
     cursor.execute(
         "INSERT INTO consumption (datetime, consumption_kwh) VALUES (%s,%s)",
@@ -28,12 +28,22 @@ def create_data(datetime: datetime, consumption_kwh: float):
     conn.commit()
     return{"status": "success"}
 
-@router.get("")
+@router.get("/list")
 def get_data(start: datetime, end: datetime):
     cursor.execute(
         "SELECT datetime, consumption_kwh FROM consumption "
         "WHERE datetime >= %s AND datetime <= %s ORDER BY datetime",
         (start, end)
+    )
+    rows = cursor.fetchall()
+    return rows
+
+@router.get("")
+def get_element(date_value: datetime):
+    cursor.execute(
+        "SELECT datetime, consumption_kwh FROM consumption "
+        "WHERE datetime = %s",
+        (date_value,)
     )
     rows = cursor.fetchall()
     return rows
