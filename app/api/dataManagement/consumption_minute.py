@@ -60,6 +60,27 @@ def create_data(datetime: datetime,
     conn.commit()
     return{"status": "success"}
 
+@router.put("")
+def update_data(datetime: datetime,
+    consumption_kwh: float,
+    household_general_kwh: float,
+    heat_pump_kwh: float,
+    ev_load_kwh: float,
+    household_base_kwh: float,
+    total_consumption_kwh: float,
+    battery_soc_kwh: float,
+    battery_charging_kwh: float,
+    battery_discharging_kwh: float,
+    grid_export_kwh: float,
+    grid_import_kwh: float):
+    cursor.execute(
+        "UPDATE consumption_minute SET consumption_kwh=%s, household_general_kwh=%s, heat_pump_kwh=%s, ev_load_kwh=%s, household_base_kwh=%s, total_consumption_kwh=%s, battery_soc_kwh=%s, battery_charging_kwh=%s, battery_discharging_kwh=%s, grid_export_kwh=%s, grid_import_kwh=%s "
+        "WHERE datetime = %s",
+        (consumption_kwh, household_general_kwh, heat_pump_kwh, ev_load_kwh, household_base_kwh, total_consumption_kwh, battery_soc_kwh, battery_charging_kwh, battery_discharging_kwh, grid_export_kwh, grid_import_kwh, datetime)
+    )
+    conn.commit()
+    return{"status": "success"}
+
 @router.get("/list")
 def get_data(start: datetime, end: datetime):
     cursor.execute(

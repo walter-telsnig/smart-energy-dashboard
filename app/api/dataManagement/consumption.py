@@ -12,7 +12,10 @@ conn = psycopg2.connect(
     dbname="pv-db", user="postgres", password="ppswy2026", host="localhost"
 )
 
-cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+try:
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+except psycopg2.OperationalError:
+    pass
 
 class ConsumptionData(BaseModel):
     datetime: datetime
@@ -24,6 +27,16 @@ def create_data(datetime: datetime, consumption_kwh: float):
     cursor.execute(
         "INSERT INTO consumption (datetime, consumption_kwh) VALUES (%s,%s)",
         (datetime, consumption_kwh)
+    )
+    conn.commit()
+    return{"status": "success"}
+
+@router.put("")
+def update_data(datetime: datetime, consumption_kwh: float):
+    cursor.execute(
+        "UPDATE consumption SET consumption_kwh=%s "
+        "WHERE datetime = %s",
+        (consumption_kwh, datetime)
     )
     conn.commit()
     return{"status": "success"}
