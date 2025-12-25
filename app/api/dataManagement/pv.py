@@ -28,6 +28,16 @@ def create_data(datetime: datetime, production_kw: float):
     conn.commit()
     return{"status": "success"}
 
+@router.put("")
+def update_data(datetime: datetime, production_kw: float):
+    cursor.execute(
+        "UPDATE pv SET production_kw=%s "
+        "WHERE datetime = %s",
+        (production_kw, datetime)
+    )
+    conn.commit()
+    return{"status": "success"}
+
 @router.get("/list")
 def get_data(start: datetime, end: datetime):
     cursor.execute(

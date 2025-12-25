@@ -12,7 +12,7 @@ st.set_page_config(layout="wide")
 if "token" not in st.session_state or st.session_state["token"] is None:
     st.warning("Please log in to access this page.")
     st.stop()
-st.title("💶 Electricity Prices (EPEX AT) - DB Version")
+st.title("💶 Electricity Prices (EPEX AT) Chart - DB Version")
 
 option = st.selectbox("15 Minute/Hourly", ("15 Minute", "Hourly"))
 st.write("You selected:", option)

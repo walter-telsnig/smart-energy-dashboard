@@ -12,15 +12,15 @@ st.set_page_config(layout="wide")
 if "token" not in st.session_state or st.session_state["token"] is None:
     st.warning("Please log in to access this page.")
     st.stop()
-st.title("💶 Electricity Prices (EPEX AT) Service - DB Version")
+st.title("☀️ PV Production Service - DB Version")
 
 option = st.selectbox("15 Minute/Hourly", ("15 Minute", "Hourly"))
 st.write("You selected:", option)
 
 if option == "15 Minute":
-    path = f"{API_BASE_URL}/api/dataManagment/price_minute-db"
+    path = f"{API_BASE_URL}/api/dataManagment/pv_minute-db"
 elif option == "Hourly":
-    path = f"{API_BASE_URL}/api/dataManagment/price-db"
+    path = f"{API_BASE_URL}/api/dataManagment/pv-db"
 
 col1, col2, col3 = st.columns(3)
 with col1:
@@ -37,7 +37,7 @@ def findData(date: datetime):
             "date_value": date
         }
     )
-    return response   
+    return response  
 
 date = st.date_input("Date:")
 if(option == "15 Minute"):
@@ -47,17 +47,18 @@ elif(option == "Hourly"):
 
 timestamp = datetime(date.year, date.month, date.day, time.hour, time.minute, time.second, tzinfo=pytz.UTC)
 
-price_eur_mwh_value = 0.0
+production_kw_value = 0.0
 
 if button_find:
     result = findData(timestamp)
     if result.status_code == 200:
         if len(result.json()) > 0:
-            df = pd.DataFrame(result.json(), columns=["datetime", "price_eur_mwh"])
+            df = pd.DataFrame(result.json(), columns=["datetime", "production_kw"])
             df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
-            price_eur_mwh_value = df["price_eur_mwh"][0]
+            production_kw_value = df["production_kw"][0]
 
-price_eur_mwh = st.number_input("€-Price per Megawatt-hour:", value=price_eur_mwh_value, format="%0.5f")
+production_kw = st.number_input("Production Kilowatt:", value=production_kw_value, format="%0.5f")
+
 if button_add:
     result = findData(timestamp)
     if result.status_code == 200:
@@ -66,7 +67,7 @@ if button_add:
                 path+"/add",
                 params={
                     "datetime": timestamp,
-                    "price_eur_mwh": price_eur_mwh
+                    "production_kw": production_kw
                 }
             )
             if response.status_code == 200:
@@ -93,7 +94,7 @@ elif button_edit:
                 path,
                 params={
                     "datetime": timestamp,
-                    "price_eur_mwh": price_eur_mwh
+                    "production_kw": production_kw
                 }
             )
 
@@ -104,4 +105,4 @@ elif button_edit:
         else:
             st.write("There is no such data. Please add it")
     else:
-        st.write("Error: " + str(result.status_code))     
+        st.write("Error: " + str(result.status_code))

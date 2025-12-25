@@ -12,7 +12,7 @@ st.set_page_config(layout="wide")
 if "token" not in st.session_state or st.session_state["token"] is None:
     st.warning("Please log in to access this page.")
     st.stop()
-st.title("☀️ PV Production - DB Version")
+st.title("☀️ PV Production Chart - DB Version")
 
 option = st.selectbox("15 Minute/Hourly", ("15 Minute", "Hourly"))
 st.write("You selected:", option)
@@ -21,48 +21,6 @@ if option == "15 Minute":
     path = f"{API_BASE_URL}/api/dataManagment/pv_minute-db"
 elif option == "Hourly":
     path = f"{API_BASE_URL}/api/dataManagment/pv-db"
-
-def existData(date: datetime):
-    response = requests.get(
-        path,
-        params={
-            "date_value": date
-        }
-    )
-    if response.status_code == 200:
-        if(len(response.json()) > 0):
-            return True
-        else:
-            return False
-    else:
-        return None 
-
-with st.expander("Add Data"):
-    date = st.date_input("Date:")
-    if(option == "15 Minute"):
-        time = st.time_input("Time:", value="00:00", step=timedelta(minutes=15))
-    elif(option == "Hourly"):
-        time = st.time_input("Time:", value="00:00", step=timedelta(hours=1))
-    production_kw = st.number_input("Production Kilowatt:")
-    if st.button("Confirm"):
-        timestamp = datetime(date.year, date.month, date.day, time.hour, time.minute, time.second, tzinfo=pytz.UTC)
-        exists = existData(timestamp)
-        if exists is None:
-            st.write("Error")
-        elif not exists:
-            response = requests.post(
-                path+"/add",
-                params={
-                    "datetime": timestamp,
-                    "production_kw": production_kw
-                }
-            )
-            if response.status_code == 200:
-                st.write("Done")
-            else:
-                st.write("Error: " + response.status_code)
-        else:
-            st.write("Exists already")
 
 now = datetime.now()
 
