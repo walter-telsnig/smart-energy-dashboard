@@ -21,12 +21,14 @@ from pydantic import BaseModel, EmailStr, ConfigDict
 from sqlalchemy.orm import Session
 from infra.db import get_db
 from modules.accounts.model import Account
+from core.security import get_password_hash
 
 router = APIRouter(prefix="/accounts", tags=["accounts"])
 
 class AccountCreate(BaseModel):
     email: EmailStr
     full_name: str
+    password: str
 
 class AccountUpdate(BaseModel):
     email: EmailStr | None = None
@@ -49,7 +51,13 @@ def create_account(payload: AccountCreate, db: Session = Depends(get_db)):
     exists = db.query(Account).filter(Account.email == payload.email).first()
     if exists:
         raise HTTPException(status_code=409, detail="email already exists")
-    obj = Account(email=payload.email, full_name=payload.full_name)
+    
+    hashed_pw = get_password_hash(payload.password)
+    obj = Account(
+        email=payload.email, 
+        full_name=payload.full_name,
+        hashed_password=hashed_pw
+    )
     db.add(obj)
     db.commit() 
     db.refresh(obj)
@@ -63,23 +71,17 @@ def list_accounts(db: Session = Depends(get_db)):
 def get_account(user_id: int, db: Session = Depends(get_db)):
     return _get_account_or_404(db, user_id)
 
-# --- UPDATED PATCH to accept JSON body OR query params ---
 @router.patch("/{user_id}", response_model=AccountRead)
 def update_account(
     user_id: int,
-    # optional JSON body
     payload: AccountUpdate | None = Body(default=None),
-    # optional query params (for tests or curl convenience)
     email: EmailStr | None = Query(default=None),
     full_name: str | None = Query(default=None),
     db: Session = Depends(get_db),
 ):
     obj = _get_account_or_404(db, user_id)
-
-    # unify sources: prefer JSON body if provided, else query params
     effective = payload or AccountUpdate(email=email, full_name=full_name)
 
-    # nothing to update?
     if effective.email is None and effective.full_name is None:
         raise HTTPException(status_code=422, detail="no fields provided to update")
 
@@ -88,7 +90,7 @@ def update_account(
         if exists:
             raise HTTPException(status_code=409, detail="email already exists")
         obj.email = effective.email
-
+    
     if effective.full_name is not None:
         obj.full_name = effective.full_name
 

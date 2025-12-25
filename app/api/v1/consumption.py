@@ -102,3 +102,30 @@ def full_series(
     df = _normalize_to_timestamp_value(df)
     rows = df.head(limit).to_dict(orient="records")
     return {"key": csv_path.stem, "count": len(rows), "rows": rows}
+
+
+@router.get("/range", response_model=dict)
+def get_range(
+    key: str = Query(..., description="CSV key"),
+    start: str = Query(..., description="Start ISO datetime"),
+    end: str = Query(..., description="End ISO datetime"),
+) -> Dict:
+    csv_path = _csv_path_for_key(key)
+    try:
+        df = pd.read_csv(csv_path)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    df = _normalize_to_timestamp_value(df)
+    
+    if not pd.api.types.is_datetime64_any_dtype(df["timestamp"]):
+        df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True)
+    
+    s = pd.to_datetime(start, utc=True)
+    end_dt = pd.to_datetime(end, utc=True)
+    
+    mask = (df["timestamp"] >= s) & (df["timestamp"] <= end_dt)
+    subset = df.loc[mask]
+    
+    rows = subset.to_dict(orient="records")
+    return {"key": csv_path.stem, "count": len(rows), "rows": rows}

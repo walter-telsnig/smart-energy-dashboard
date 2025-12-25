@@ -1,5 +1,6 @@
 # app/main.py
 from fastapi import FastAPI
+from infra.db import Base, engine
 
 from app.api.v1.accounts import router as accounts_router
 from app.api.v1.pv import router as pv_router
@@ -14,8 +15,6 @@ from app.api.v1.consumption import router as consumption_router
 from app.api.v1.market import router as market_router
 from app.api.v1.battery import router as battery_router
 
-from infra.db import Base, engine
-
 def create_app() -> FastAPI:
     app = FastAPI(title="Smart Energy Dashboard API", version="0.1.0")
 
@@ -24,8 +23,8 @@ def create_app() -> FastAPI:
         return {"status": "ok"}
 
     app.include_router(accounts_router, prefix="/api/v1")
-    app.include_router(pv_router, prefix="/api/v1")
     app.include_router(auth_router, prefix="/api/v1")
+    app.include_router(pv_router, prefix="/api/v1")
 
     app.include_router(timeseries_router, prefix="/api/v1")
     app.include_router(forecast_router, prefix="/api/v1")

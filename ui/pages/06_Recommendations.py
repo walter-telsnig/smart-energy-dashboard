@@ -5,9 +5,13 @@ import pandas as pd
 import streamlit as st
 import altair as alt
 
+
 API_BASE = "http://localhost:8000/api/v1"
 
 st.set_page_config(page_title="Energy Recommendations", layout="wide")
+
+if "token" not in st.session_state or not st.session_state["token"]:
+    st.switch_page("pages/00_Login.py")
 
 # ---------------- Sidebar ----------------
 with st.sidebar:

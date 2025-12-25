@@ -2,72 +2,155 @@
 # File: ui/app.py
 # ==============================================
 """
-Smart Energy Dashboard — Streamlit multipage entry.
-
-Why this structure:
-- Keep a single entry at ui/app.py.
-- Feature pages under ui/pages/ (native Streamlit multipage).
-- Each page uses tabs internally for different views (chart, stats, preview).
-
-Run:
-  streamlit run ui/app.py
-
-Notes:
-- Pages expect CSVs in infra/data/* but can be switched to API calls where available.
-- Keep this file light; most logic lives in the pages.
+Smart Energy Dashboard — Overview Page.
+Focus: High-level status, immediate flow, and key metrics.
 """
 # from ui.utils.overview_metrics import count_csv_files, count_csv_rows, total_pv_kwh
 from __future__ import annotations
 import streamlit as st
-from pathlib import Path
-import pandas as pd
+import requests
 
-st.set_page_config(page_title="Smart Energy Dashboard", layout="wide")
+from streamlit_echarts import st_echarts  # type: ignore
 
-import importlib.util
+st.set_page_config(page_title="Smart Energy Dashboard", layout="wide", page_icon="⚡")
 
-def _load_auth():
-    auth_path = Path(__file__).resolve().parent / "auth.py"  # ui/auth.py
-    spec = importlib.util.spec_from_file_location("auth", auth_path)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"Could not load auth module from {auth_path}")
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
+# --- Session State (auth only) ---
+if "token" not in st.session_state:
+    st.session_state["token"] = None
 
-auth = _load_auth()
-# st.write("AUTH FILE:", getattr(auth, "__file__", "no file"))
-# st.write("AUTH EXPORTS:", [x for x in dir(auth) if "logout" in x or "login" in x])
+# Gate: if not logged in, go to Landing/Login page
+if not st.session_state["token"]:
+    st.switch_page("pages/00_Login.py")
 
-auth.require_login()
-auth.logout_button()
+# --- Authenticated Dashboard ---
 
-st.title("🔆 Smart Energy Dashboard")
-st.caption("PV • Prices • Consumption • Battery Simulation")
+# 1. Sidebar Controls
+with st.sidebar:
+    st.header("Dashboard Settings")
+    mode = st.radio("Optimization Mode", ["Economic Mode 💰", "Green Mode 🌿"],
+                    help="Economic: Minimize cost. Green: Maximize self-consumption.")
 
-DATA_DIR = Path("infra/data")
+    st.divider()
+    if st.button("Logout"):
+        st.session_state["token"] = None
+        st.switch_page("pages/00_Login.py")
 
-cols = st.columns(3)
-paths = {
-    "PV": DATA_DIR / "pv",
-    "Market": DATA_DIR / "market",
-    "Consumption": DATA_DIR / "consumption",
+# 2. Header & Metrics
+st.title("⚡ Energy Overview")
+st.caption(f"Current Mode: **{mode}**")
+
+# Fetch 'Live' Data (using first hour of merged series as proxy for 'now')
+# In a real app, this would be `POST /api/v1/live` or similar.
+metrics = {
+    "pv": 0.0, "load": 0.0, "price": 0.0, "battery_soc": 50, "battery_flow": 0.0, "grid": 0.0
 }
 
-with cols[0]:
-    st.subheader("Data Folders")
-    for name, p in paths.items():
-        exists = p.exists()
-        st.write(("✅" if exists else "❌"), name, f"→ {p}")
+try:
+    # Get 1 hour of data to simulate "live" state
+    r = requests.get("http://localhost:8000/api/v1/timeseries/merged?hours=1&window=true", timeout=2)
+    if r.status_code == 200:
+        data = r.json()
+        if data:
+            row = data[0]
+            metrics["pv"] = float(row.get("pv_kwh", 0))
+            metrics["load"] = float(row.get("load_kwh", 0)) # type: ignore
+            metrics["price"] = float(row.get("price_eur_kwh", 0))
+            # Mock battery state since backend doesn't have live state persistence yet
+            metrics["battery_flow"] = metrics["pv"] * 0.2 if mode == "Green Mode 🌿" else 0
+except Exception:
+    pass
 
-with cols[1]:
-    st.subheader("Tips")
-    st.markdown("- Use the left sidebar to navigate pages. - Keep all CSV timestamps in UTC.")
+# Calculations
+pv = metrics["pv"]
+load = metrics["load"]
+grid_flow = load - pv + metrics["battery_flow"] # Simplified balance
+self_sufficiency = min(pv, load) / load * 100 if load > 0 else 100.0
+net_cost = grid_flow * metrics["price"]
 
-with cols[2]:
-    st.subheader("Next")
-    st.markdown("- Try **Battery Sim** page after selecting PV + Consumption windows and parameters.")
+# Render Metrics
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.metric("Self-Sufficiency", f"{self_sufficiency:.1f} %", delta=f"{pv:.1f} kWh PV")
+with col2:
+    bat_delta = f"{'+' if metrics['battery_flow'] > 0 else ''}{metrics['battery_flow']:.1f} kW"
+    st.metric("Battery Status", f"{metrics['battery_soc']} %", delta=bat_delta)
+with col3:
+    color = "inverse" if net_cost > 0 else "normal" # inverse: red if cost > 0
+    st.metric("Live Net Cost", f"{net_cost:.2f} €", delta="Spending" if net_cost > 0 else "Earning", delta_color=color)  # type: ignore
 
+# 3. Energy Flow Visualization (Sankey)
+st.subheader("Energy Flow")
+
+# Construct Sankey Data
+# Nodes: PV, Grid, Battery, House
+# Links: PV->House, PV->Battery, PV->Grid, Grid->House, Battery->House
+nodes = [
+    {"name": "PV ☀️"},
+    {"name": "Grid 🔌"},
+    {"name": "Battery 🔋"},
+    {"name": "House 🏠"}
+]
+
+links = []
+# Very simple flow logic for demo
+if pv >= load:
+    # PV covers load, excess to battery/grid
+    links.append({"source": "PV ☀️", "target": "House 🏠", "value": round(load, 2)})
+    surplus = pv - load
+    if metrics["battery_flow"] > 0: # Charging
+        links.append({"source": "PV ☀️", "target": "Battery 🔋", "value": round(metrics["battery_flow"], 2)})
+        surplus -= metrics["battery_flow"]
+    if surplus > 0:
+        links.append({"source": "PV ☀️", "target": "Grid 🔌", "value": round(surplus, 2)})
+else:
+    # PV insufficient
+    links.append({"source": "PV ☀️", "target": "House 🏠", "value": round(pv, 2)})
+    deficit = load - pv
+    # Check battery discharge
+    if metrics["battery_flow"] < 0: # Discharging
+        discharge = abs(metrics["battery_flow"])
+        links.append({"source": "Battery 🔋", "target": "House 🏠", "value": round(discharge, 2)})
+        deficit -= discharge
+    if deficit > 0:
+        links.append({"source": "Grid 🔌", "target": "House 🏠", "value": round(deficit, 2)})
+
+option = {
+    "tooltip": {"trigger": "item", "triggerOn": "mousemove"},
+    "series": [
+        {
+            "type": "sankey",
+            "data": nodes,
+            "links": links,
+            "emphasis": {"focus": "adjacency"},
+            "lineStyle": {"color": "gradient", "curveness": 0.5},
+            "label": {"position": "top"},
+            "levels": [
+                {
+                    "depth": 0,
+                    "itemStyle": {"color": "#fbb4ae"},
+                    "lineStyle": {"color": "source", "opacity": 0.6},
+                },
+                {
+                    "depth": 1,
+                    "itemStyle": {"color": "#b3cde3"},
+                    "lineStyle": {"color": "source", "opacity": 0.6},
+                },
+                {
+                    "depth": 2,
+                    "itemStyle": {"color": "#ccebc5"},
+                    "lineStyle": {"color": "source", "opacity": 0.6},
+                },
+                {
+                    "depth": 3,
+                    "itemStyle": {"color": "#decbe4"},
+                    "lineStyle": {"color": "source", "opacity": 0.6},
+                },
+            ],
+        }
+    ],
+}
+
+st_echarts(options=option, height="500px")
 st.info("Use the sidebar: PV • Prices • Consumption • Compare • Battery Sim")
 
 #--------------------------------------------------------------

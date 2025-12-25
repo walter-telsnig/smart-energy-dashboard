@@ -16,6 +16,10 @@ import requests
 from typing import List, Tuple
 
 st.set_page_config(layout="wide")
+
+if "token" not in st.session_state or not st.session_state["token"]:
+    st.switch_page("pages/00_Login.py")
+
 st.title("🩺 Health Check")
 
 # --- Filesystem checks (use Path objects here) ---
