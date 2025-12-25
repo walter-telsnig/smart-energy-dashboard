@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # app/api/v1/auth.py
 from __future__ import annotations
 
@@ -40,16 +41,42 @@ def login_for_access_token(
     email = form_data.username.strip().lower()
 
     user = db.query(Account).filter(Account.email == email).first()
+=======
+from datetime import timedelta
+from typing import Annotated
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
+from infra.db import get_db
+from modules.accounts.model import Account
+from core.security import verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
+
+router = APIRouter(tags=["auth"])
+
+@router.post("/token")
+def login_for_access_token(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    db: Session = Depends(get_db)
+):
+    user = db.query(Account).filter(Account.email == form_data.username).first()
+>>>>>>> 1be127f8da18f1a3f2b62413646a1a4b0eea29f4
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+<<<<<<< HEAD
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user.email},
         expires_delta=access_token_expires,
+=======
+    
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.email}, expires_delta=access_token_expires
+>>>>>>> 1be127f8da18f1a3f2b62413646a1a4b0eea29f4
     )
     return {"access_token": access_token, "token_type": "bearer"}

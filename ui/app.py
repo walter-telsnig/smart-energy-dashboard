@@ -21,6 +21,36 @@ if "token" not in st.session_state:
 # Gate: if not logged in, go to Landing/Login page
 if not st.session_state["token"]:
     st.switch_page("pages/00_Login.py")
+# --- Session State & Login ---
+if "token" not in st.session_state:
+    st.session_state["token"] = None
+
+def login():
+    st.title("🔐 Login")
+    with st.form("login_form"):
+        email = st.text_input("Email")
+        password = st.text_input("Password", type="password")
+        submitted = st.form_submit_button("Sign In")
+        
+        if submitted:
+            try:
+                res = requests.post(
+                    "http://localhost:8000/api/v1/token",
+                    data={"username": email, "password": password}
+                )
+                if res.status_code == 200:
+                    token = res.json().get("access_token")
+                    st.session_state["token"] = token
+                    st.success("Logged in successfully!")
+                    st.rerun()
+                else:
+                    st.error("Invalid credentials")
+            except Exception as e:
+                st.error(f"Connection failed: {e}")
+
+if not st.session_state["token"]:
+    login()
+    st.stop()
 
 # --- Authenticated Dashboard ---
 
@@ -34,6 +64,13 @@ with st.sidebar:
     if st.button("Logout"):
         st.session_state["token"] = None
         st.switch_page("pages/00_Login.py")
+    mode = st.radio("Optimization Mode", ["Economic Mode 💰", "Green Mode 🌿"], 
+                    help="Economic: Minimize cost. Green: Maximize self-consumption.")
+    
+    st.divider()
+    if st.button("Logout"):
+        st.session_state["token"] = None
+        st.rerun()
 
 # 2. Header & Metrics
 st.title("⚡ Energy Overview")
@@ -270,3 +307,4 @@ with energy_cols[0]:
         value=f"{total_pv_kwh(paths['PV']):,.0f}",
         help="Sum of PV energy across all PV CSV files.",
     )
+st_echarts(options=option, height="500px")
