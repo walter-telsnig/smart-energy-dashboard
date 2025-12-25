@@ -29,6 +29,16 @@ def create_data(datetime: datetime, temp_c: float, cloud_cover_pct: float):
     conn.commit()
     return{"status": "success"}
 
+@router.put("")
+def update_data(datetime: datetime, temp_c: float, cloud_cover_pct: float):
+    cursor.execute(
+        "UPDATE weather SET temp_c=%s, cloud_cover_pct=%s "
+        "WHERE datetime = %s",
+        (temp_c, cloud_cover_pct, datetime)
+    )
+    conn.commit()
+    return{"status": "success"} 
+
 @router.get("/list")
 def get_data(start: datetime, end: datetime):
     cursor.execute(
