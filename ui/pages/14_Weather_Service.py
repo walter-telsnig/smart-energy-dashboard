@@ -54,25 +54,28 @@ temp_c = st.number_input("Temperature Celsius:", value=temp_c_value, format="%0.
 cloud_cover_pct = st.number_input("Cloud Cover in %:", value=cloud_cover_pct_value, format="%0.2f")
 
 if button_add:
-    result = findData(timestamp)
-    if result.status_code == 200:
-        if len(result.json()) == 0:
-            response = requests.post(
-                path+"/add",
-                params={
-                    "datetime": timestamp,
-                    "temp_c": temp_c,
-                    "cloud_cover_pct": cloud_cover_pct
-                }
-            )
-            if response.status_code == 200:
-                st.write("Done")
-            else:
-                st.write("Error: " + response.status_code)
-        else:
-            st.write("Exists already")
+    if cloud_cover_pct > 100:
+        st.write("Please take a number equal or less than 100")
     else:
-        st.write("Error: " + str(result.status_code))
+        result = findData(timestamp)
+        if result.status_code == 200:
+            if len(result.json()) == 0:
+                response = requests.post(
+                    path+"/add",
+                    params={
+                        "datetime": timestamp,
+                        "temp_c": temp_c,
+                        "cloud_cover_pct": cloud_cover_pct
+                    }
+                )
+                if response.status_code == 200:
+                    st.write("Done")
+                else:
+                    st.write("Error: " + response.status_code)
+            else:
+                st.write("Exists already")
+        else:
+            st.write("Error: " + str(result.status_code))
 elif button_find:
     if result.status_code == 200:
         if len(result.json()) > 0:
@@ -82,23 +85,26 @@ elif button_find:
     else:
         st.write("Error: " + str(result.status_code))
 elif button_edit:
-    result = findData(timestamp)
-    if result.status_code == 200:
-        if len(result.json())>0:
-            response = requests.put(
-                path,
-                params={
-                    "datetime": timestamp,
-                    "temp_c": temp_c,
-                    "cloud_cover_pct": cloud_cover_pct
-                }
-            )
-
-            if response.status_code == 200:
-                st.write("Done")
-            else:
-                st.write("Error: " + str(response.status_code))
-        else:
-            st.write("There is no such data. Please add it")
+    if cloud_cover_pct > 100:
+        st.write("Please take a number equal or less than 100")
     else:
-        st.write("Error: " + str(result.status_code)) 
+        result = findData(timestamp)
+        if result.status_code == 200:
+            if len(result.json())>0:
+                response = requests.put(
+                    path,
+                    params={
+                        "datetime": timestamp,
+                        "temp_c": temp_c,
+                        "cloud_cover_pct": cloud_cover_pct
+                    }
+                )
+
+                if response.status_code == 200:
+                    st.write("Done")
+                else:
+                    st.write("Error: " + str(response.status_code))
+            else:
+                st.write("There is no such data. Please add it")
+        else:
+            st.write("Error: " + str(result.status_code)) 
