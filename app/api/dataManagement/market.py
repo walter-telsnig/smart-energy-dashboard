@@ -28,6 +28,16 @@ def create_data(datetime: datetime, price_eur_mwh: float):
     conn.commit()
     return{"status": "success"}
 
+@router.put("")
+def update_data(datetime: datetime, price_eur_mwh: float):
+    cursor.execute(
+        "UPDATE market SET price_eur_mwh=%s "
+        "WHERE datetime = %s",
+        (price_eur_mwh, datetime)
+    )
+    conn.commit()
+    return{"status": "success"}    
+
 @router.get("/list")
 def get_data(start: datetime, end: datetime):
     cursor.execute(

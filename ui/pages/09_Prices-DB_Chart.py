@@ -22,49 +22,6 @@ if option == "15 Minute":
 elif option == "Hourly":
     path = f"{API_BASE_URL}/api/dataManagment/price-db"
 
-def existData(date: datetime):
-    response = requests.get(
-        path,
-        params={
-            "date_value": date
-        }
-    )
-    if response.status_code == 200:
-        if(len(response.json()) > 0):
-            return True
-        else:
-            return False
-    else:
-        return None    
-
-with st.expander("Add Data"):
-    date = st.date_input("Date:")
-    if(option == "15 Minute"):
-        time = st.time_input("Time:", value="00:00", step=timedelta(minutes=15))
-    elif(option == "Hourly"):
-        time = st.time_input("Time:", value="00:00", step=timedelta(hours=1))
-    price_eur_mwh = st.number_input("€-Price per Megawatt-hour:")
-    if st.button("Confirm"):
-        timestamp = datetime(date.year, date.month, date.day, time.hour, time.minute, time.second, tzinfo=pytz.UTC)
-        exists = existData(timestamp)
-        if exists is None:
-            st.write("Error")
-        elif not exists:
-            response = requests.post(
-                path+"/add",
-                params={
-                    "datetime": timestamp,
-                    "price_eur_mwh": price_eur_mwh
-                }
-            )
-            if response.status_code == 200:
-                st.write("Done")
-            else:
-                st.write("Error: " + response.status_code)
-        else:
-            st.write("Exists already")
-            
-
 now = datetime.now()
 
 left, right = st.columns(2)

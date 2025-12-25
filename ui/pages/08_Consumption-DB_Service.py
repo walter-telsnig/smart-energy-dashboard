@@ -137,6 +137,14 @@ if button_add:
             st.write("Exists already")
     else:
         st.write("Error: " + str(result.status_code))
+elif button_find:
+    if result.status_code == 200:
+        if len(result.json()) > 0:
+            st.dataframe(df, hide_index=True)
+        else:
+            st.write("No Data")
+    else:
+        st.write("Error: " + str(result.status_code))
 elif button_edit:
     result = findData(timestamp)
     if result.status_code == 200:
@@ -174,13 +182,5 @@ elif button_edit:
                 st.write("Error: " + str(response.status_code))
         else:
             st.write("There is no such data. Please add it")
-    else:
-        st.write("Error: " + str(result.status_code))
-elif button_find:
-    if result.status_code == 200:
-        if len(result.json()) > 0:
-            st.dataframe(df, hide_index=True)
-        else:
-            st.write("No Data")
     else:
         st.write("Error: " + str(result.status_code))  
