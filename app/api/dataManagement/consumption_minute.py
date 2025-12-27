@@ -100,3 +100,13 @@ def get_element(date_value: datetime):
     )
     rows = cursor.fetchall()
     return rows
+
+@router.delete("")
+def delete_element(date_value: datetime):
+    cursor.execute(
+        "DELETE FROM consumption_minute "
+        "WHERE datetime = %s",
+        (date_value,)
+    )
+    conn.commit()
+    return{"status": "success"}

@@ -64,9 +64,9 @@ def get_element(date_value: datetime):
 @router.delete("")
 def delete_element(date_value: datetime):
     cursor.execute(
-        "SELECT datetime, consumption_kwh FROM consumption "
+        "DELETE FROM consumption "
         "WHERE datetime = %s",
         (date_value,)
     )
-    rows = cursor.fetchall()
-    return rows
+    conn.commit()
+    return{"status": "success"}
