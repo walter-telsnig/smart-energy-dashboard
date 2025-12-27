@@ -3,7 +3,7 @@ import streamlit as st
 import requests
 import pandas as pd
 import pytz
-from datetime import datetime, time, timedelta
+from datetime import datetime, time, timedelta, date
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
