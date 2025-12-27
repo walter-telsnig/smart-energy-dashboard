@@ -3,7 +3,7 @@ import streamlit as st
 import requests
 import pandas as pd
 import pytz
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
@@ -41,13 +41,13 @@ def findData(date: datetime):
     )
     return response
 
-date = st.date_input("Date:")
+date_value = st.date_input("Date:")
 if(option == "15 Minute"):
-    time = st.time_input("Time:", value=time(0,0), step=900)
+    time_value = st.time_input("Time:", value=time(0,0), step=timedelta(minutes=15))
 elif(option == "Hourly"):
-    time = st.time_input("Time:", value=time(0,0), step=3600)
+    time_value = st.time_input("Time:", value=time(0,0), step=timedelta(hours=1))
 
-timestamp = datetime(date.year, date.month, date.day, time.hour, time.minute, time.second, tzinfo=pytz.UTC)
+timestamp = datetime(date_value.year, date_value.month, date_value.day, time_value.hour, time_value.minute, time_value.second, tzinfo=pytz.UTC)
 
 result = None
 consumption_kwh_value = 0.0
