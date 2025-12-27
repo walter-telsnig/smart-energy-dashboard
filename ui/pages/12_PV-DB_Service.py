@@ -36,7 +36,7 @@ def findData(date: datetime):
     response = requests.get(
         path,
         params={
-            "date_value": date
+            "date_value": date.isoformat()
         }
     )
     return response  
@@ -68,7 +68,7 @@ if button_add:
             response = requests.post(
                 path,
                 params={
-                    "datetime": timestamp,
+                    "datetime": timestamp.isoformat(),
                     "production_kw": production_kw
                 }
             )
@@ -95,7 +95,7 @@ elif button_edit:
             response = requests.put(
                 path,
                 params={
-                    "datetime": timestamp,
+                    "datetime": timestamp.isoformat(),
                     "production_kw": production_kw
                 }
             )
@@ -115,7 +115,7 @@ elif button_delete:
             response = requests.delete(
                 path,
                 params={
-                    "date_value": timestamp
+                    "date_value": timestamp.isoformat()
                 }
             )
 

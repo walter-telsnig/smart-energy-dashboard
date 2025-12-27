@@ -36,7 +36,7 @@ def findData(date: datetime):
     response = requests.get(
         path,
         params={
-            "date_value": date
+            "date_value": date.isoformat()
         }
     )
     return response
@@ -108,7 +108,7 @@ if button_add:
                 response = requests.post(
                     path,
                     params={
-                        "datetime": timestamp,
+                        "datetime": timestamp.isoformat(),
                         "consumption_kwh": consumption_kwh,
                         "household_general_kwh": household_general_kwh,
                         "heat_pump_kwh": heat_pump_kwh,
@@ -126,7 +126,7 @@ if button_add:
                 response = requests.post(
                     path,
                     params={
-                        "datetime": timestamp,
+                        "datetime": timestamp.isoformat(),
                         "consumption_kwh": consumption_kwh
                     }
                 )
@@ -155,7 +155,7 @@ elif button_edit:
                 response = requests.put(
                     path,
                     params={
-                        "datetime": timestamp,
+                        "datetime": timestamp.isoformat(),
                         "consumption_kwh": consumption_kwh,
                         "household_general_kwh": household_general_kwh,
                         "heat_pump_kwh": heat_pump_kwh,
@@ -173,7 +173,7 @@ elif button_edit:
                 response = requests.put(
                     path,
                     params={
-                        "datetime": timestamp,
+                        "datetime": timestamp.isoformat(),
                         "consumption_kwh": consumption_kwh
                     }
                 )
@@ -193,7 +193,7 @@ elif button_delete:
             response = requests.delete(
                 path,
                 params={
-                    "date_value": timestamp
+                    "date_value": timestamp.isoformat()
                 }
             )
 

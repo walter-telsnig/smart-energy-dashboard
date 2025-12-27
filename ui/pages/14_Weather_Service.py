@@ -30,7 +30,7 @@ def findData(date: datetime):
     response = requests.get(
         path,
         params={
-            "date_value": date
+            "date_value": date.isoformat()
         }
     )
     return response   
@@ -65,7 +65,7 @@ if button_add:
                 response = requests.post(
                     path,
                     params={
-                        "datetime": timestamp,
+                        "datetime": timestamp.isoformat(),
                         "temp_c": temp_c,
                         "cloud_cover_pct": cloud_cover_pct
                     }
@@ -73,7 +73,7 @@ if button_add:
                 if response.status_code == 200:
                     st.write("Done")
                 else:
-                    st.write("Error: " + response.status_code)
+                    st.write("Error: " + str(response.status_code))
             else:
                 st.write("Exists already")
         else:
@@ -96,7 +96,7 @@ elif button_edit:
                 response = requests.put(
                     path,
                     params={
-                        "datetime": timestamp,
+                        "datetime": timestamp.isoformat(),
                         "temp_c": temp_c,
                         "cloud_cover_pct": cloud_cover_pct
                     }
@@ -117,7 +117,7 @@ elif button_delete:
             response = requests.delete(
                 path,
                 params={
-                    "date_value": timestamp
+                    "date_value": timestamp.isoformat()
                 }
             )
 
