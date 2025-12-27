@@ -16,13 +16,15 @@ st.title(":cloud: Weather Service - DB Version")
 
 path = f"{API_BASE_URL}/api/dataManagment/weather-db"
 
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 with col1:
     button_add = st.button("Add Data")
 with col2:
     button_find = st.button("Find Data")
 with col3:
     button_edit = st.button("Edit Data")
+with col4:
+    button_delete = st.button("Delete Data")
 
 def findData(date: datetime):
     response = requests.get(
@@ -108,3 +110,22 @@ elif button_edit:
                 st.write("There is no such data. Please add it")
         else:
             st.write("Error: " + str(result.status_code)) 
+elif button_delete:
+    result = findData(timestamp)
+    if result.status_code == 200:
+        if len(result.json()) > 0:
+            response = requests.delete(
+                path,
+                params={
+                    "date_value": timestamp
+                }
+            )
+
+            if response.status_code == 200:
+                st.write("Done")
+            else:
+                st.write("Error: " + str(result.status_code))
+        else:
+            st.write("There is no such data.")
+    else:
+        st.write("Error: " + str(result.status_code))
