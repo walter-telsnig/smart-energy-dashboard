@@ -35,12 +35,12 @@ end_ts = pd.Timestamp(end, tz="UTC") + pd.Timedelta(days=1)
 preview_amount = st.number_input("preview_amount",value=48)
 
 response = requests.get(
-        path+"/list",
-        params={
-            "start": start_ts,
-            "end": end_ts
-        }
-    )
+    path+"/list",
+    params={
+        "start": start_ts.isoformat(),
+        "end": end_ts.isoformat()
+    }
+)
 
 if response.status_code == 200:
     if(option == "15 Minute"):

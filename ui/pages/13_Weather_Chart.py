@@ -29,8 +29,8 @@ end_ts = pd.Timestamp(end, tz="UTC") + pd.Timedelta(days=1)
 response = requests.get(
     path+"/list",
     params={
-        "start": start_ts,
-        "end": end_ts
+        "start": start_ts.isoformat(),
+        "end": end_ts.isoformat()
     }
 )
 
