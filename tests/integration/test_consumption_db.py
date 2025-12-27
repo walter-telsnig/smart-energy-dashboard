@@ -8,7 +8,7 @@ end = start + timedelta(days=7)
 
 def test_consumption_db_get():
     resp = client.get(
-        "/api/dataManagment/consumption-db",
+        "/api/dataManagment/consumption-db/list",
         params={
             "start": start,
             "end": end
@@ -21,7 +21,7 @@ def test_consumption_db_get():
 
 def test_consumption_db_get_error():
     resp = client.get(
-        "/api/dataManagment/consumption-db",
+        "/api/dataManagment/consumption-db/list",
     )
 
     assert resp.status_code != 200

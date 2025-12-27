@@ -8,7 +8,7 @@ end = start + timedelta(days=7)
 
 def test_pv_db_get():
     resp = client.get(
-        "/api/dataManagment/pv-db",
+        "/api/dataManagment/pv-db/list",
         params={
             "start": start,
             "end": end
@@ -21,7 +21,7 @@ def test_pv_db_get():
 
 def test_pv_db_get_error():
     resp = client.get(
-        "/api/dataManagment/pv-db",
+        "/api/dataManagment/pv-db/list",
     )
 
     assert resp.status_code != 200

@@ -8,7 +8,7 @@ end = start + timedelta(days=7)
 
 def test_market_minute_db_get():
     resp = client.get(
-        "/api/dataManagment/price_minute-db",
+        "/api/dataManagment/price_minute-db/list",
         params={
             "start": start,
             "end": end
@@ -21,7 +21,7 @@ def test_market_minute_db_get():
 
 def test_market_minute_db_get_error():
     resp = client.get(
-        "/api/dataManagment/price_minute-db",
+        "/api/dataManagment/price_minute-db/list",
     )
 
     assert resp.status_code != 200
