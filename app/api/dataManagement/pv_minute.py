@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from datetime import datetime
 import psycopg2
 import psycopg2.extras
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter
 
 router = APIRouter(prefix="/pv_minute-db" ,tags=["pv"])
 
