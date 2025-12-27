@@ -3,7 +3,7 @@ import streamlit as st
 import requests
 import pandas as pd
 import pytz
-from datetime import datetime
+from datetime import datetime, time
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
@@ -36,7 +36,7 @@ def findData(date: datetime):
     return response   
 
 date = st.date_input("Date:")
-time = st.time_input("Time:", value="00:00", step=3600)
+time = st.time_input("Time:", value=time(0,0), step=3600)
 
 timestamp = datetime(date.year, date.month, date.day, time.hour, time.minute, time.second, tzinfo=pytz.UTC)
 
