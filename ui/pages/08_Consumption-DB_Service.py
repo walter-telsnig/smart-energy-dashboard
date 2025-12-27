@@ -109,17 +109,17 @@ if button_add:
                     path,
                     params={
                         "datetime": timestamp.isoformat(),
-                        "consumption_kwh": consumption_kwh,
-                        "household_general_kwh": household_general_kwh,
-                        "heat_pump_kwh": heat_pump_kwh,
-                        "ev_load_kwh": ev_load_kwh,
-                        "household_base_kwh": household_base_kwh,
-                        "total_consumption_kwh": total_consumption_kwh,
-                        "battery_soc_kwh": battery_soc_kwh,
-                        "battery_charging_kwh": battery_charging_kwh,
-                        "battery_discharging_kwh": battery_discharging_kwh,
-                        "grid_export_kwh": grid_export_kwh,
-                        "grid_import_kwh": grid_import_kwh
+                        "consumption_kwh": str(consumption_kwh),
+                        "household_general_kwh": str(household_general_kwh),
+                        "heat_pump_kwh": str(heat_pump_kwh),
+                        "ev_load_kwh": str(ev_load_kwh),
+                        "household_base_kwh": str(household_base_kwh),
+                        "total_consumption_kwh": str(total_consumption_kwh),
+                        "battery_soc_kwh": str(battery_soc_kwh),
+                        "battery_charging_kwh": str(battery_charging_kwh),
+                        "battery_discharging_kwh": str(battery_discharging_kwh),
+                        "grid_export_kwh": str(grid_export_kwh),
+                        "grid_import_kwh": str(grid_import_kwh)
                     }
                 )
             elif(option == "Hourly"):
@@ -127,7 +127,7 @@ if button_add:
                     path,
                     params={
                         "datetime": timestamp.isoformat(),
-                        "consumption_kwh": consumption_kwh
+                        "consumption_kwh": str(consumption_kwh)
                     }
                 )
 
@@ -156,17 +156,17 @@ elif button_edit:
                     path,
                     params={
                         "datetime": timestamp.isoformat(),
-                        "consumption_kwh": consumption_kwh,
-                        "household_general_kwh": household_general_kwh,
-                        "heat_pump_kwh": heat_pump_kwh,
-                        "ev_load_kwh": ev_load_kwh,
-                        "household_base_kwh": household_base_kwh,
-                        "total_consumption_kwh": total_consumption_kwh,
-                        "battery_soc_kwh": battery_soc_kwh,
-                        "battery_charging_kwh": battery_charging_kwh,
-                        "battery_discharging_kwh": battery_discharging_kwh,
-                        "grid_export_kwh": grid_export_kwh,
-                        "grid_import_kwh": grid_import_kwh
+                        "consumption_kwh": str(consumption_kwh),
+                        "household_general_kwh": str(household_general_kwh),
+                        "heat_pump_kwh": str(heat_pump_kwh),
+                        "ev_load_kwh": str(ev_load_kwh),
+                        "household_base_kwh": str(household_base_kwh),
+                        "total_consumption_kwh": str(total_consumption_kwh),
+                        "battery_soc_kwh": str(battery_soc_kwh),
+                        "battery_charging_kwh": str(battery_charging_kwh),
+                        "battery_discharging_kwh": str(battery_discharging_kwh),
+                        "grid_export_kwh": str(grid_export_kwh),
+                        "grid_import_kwh": str(grid_import_kwh)
                     }
                 )
             elif option == "Hourly":
@@ -174,7 +174,7 @@ elif button_edit:
                     path,
                     params={
                         "datetime": timestamp.isoformat(),
-                        "consumption_kwh": consumption_kwh
+                        "consumption_kwh": str(consumption_kwh)
                     }
                 )
 

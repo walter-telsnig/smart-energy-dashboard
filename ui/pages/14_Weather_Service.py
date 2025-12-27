@@ -66,8 +66,8 @@ if button_add:
                     path,
                     params={
                         "datetime": timestamp.isoformat(),
-                        "temp_c": temp_c,
-                        "cloud_cover_pct": cloud_cover_pct
+                        "temp_c": str(temp_c),
+                        "cloud_cover_pct": str(cloud_cover_pct)
                     }
                 )
                 if response.status_code == 200:
@@ -97,8 +97,8 @@ elif button_edit:
                     path,
                     params={
                         "datetime": timestamp.isoformat(),
-                        "temp_c": temp_c,
-                        "cloud_cover_pct": cloud_cover_pct
+                        "temp_c": str(temp_c),
+                        "cloud_cover_pct": str(cloud_cover_pct)
                     }
                 )
 

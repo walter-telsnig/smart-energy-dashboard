@@ -69,7 +69,7 @@ if button_add:
                 path,
                 params={
                     "datetime": timestamp.isoformat(),
-                    "production_kw": production_kw
+                    "production_kw": str(production_kw)
                 }
             )
             if response.status_code == 200:
@@ -96,7 +96,7 @@ elif button_edit:
                 path,
                 params={
                     "datetime": timestamp.isoformat(),
-                    "production_kw": production_kw
+                    "production_kw": str(production_kw)
                 }
             )
 

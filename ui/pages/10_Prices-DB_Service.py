@@ -68,7 +68,7 @@ if button_add:
                 path,
                 params={
                     "datetime": timestamp.isoformat(),
-                    "price_eur_mwh": price_eur_mwh
+                    "price_eur_mwh": str(price_eur_mwh)
                 }
             )
             if response.status_code == 200:
@@ -95,7 +95,7 @@ elif button_edit:
                 path,
                 params={
                     "datetime": timestamp.isoformat(),
-                    "price_eur_mwh": price_eur_mwh
+                    "price_eur_mwh": str(price_eur_mwh)
                 }
             )
 
