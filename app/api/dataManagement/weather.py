@@ -20,7 +20,7 @@ class WeatherData(BaseModel):
     cloud_cover_pct: float
 
 #TODO: create functions for create, get, update and delete
-@router.post("/add")
+@router.post("")
 def create_data(datetime: datetime, temp_c: float, cloud_cover_pct: float):
     cursor.execute(
         "INSERT INTO weather (datetime, temp_c, cloud_cover_pct) VALUES (%s,%s, %s)",

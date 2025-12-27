@@ -29,7 +29,7 @@ class ConsumptionMinuteData(BaseModel):
     grid_import_kwh: float
 
 #TODO: create functions for create, get, update and delete
-@router.post("/add")
+@router.post("")
 def create_data(datetime: datetime,
     consumption_kwh: float,
     household_general_kwh: float,

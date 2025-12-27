@@ -104,7 +104,7 @@ if button_add:
         if len(result.json()) == 0:
             if(option == "15 Minute"):
                 response = requests.post(
-                    path+"/add",
+                    path,
                     params={
                         "datetime": timestamp,
                         "consumption_kwh": consumption_kwh,

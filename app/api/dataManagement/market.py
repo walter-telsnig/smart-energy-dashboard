@@ -19,7 +19,7 @@ class MarketData(BaseModel):
     price_eur_mwh: float
 
 #TODO: create functions for create, get, update and delete
-@router.post("/add")
+@router.post("")
 def create_data(datetime: datetime, price_eur_mwh: float):
     cursor.execute(
         "INSERT INTO market (datetime, price_eur_mwh) VALUES (%s,%s)",

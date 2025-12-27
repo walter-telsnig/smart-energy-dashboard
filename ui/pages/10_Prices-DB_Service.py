@@ -63,7 +63,7 @@ if button_add:
     if result.status_code == 200:
         if len(result.json()) == 0:
             response = requests.post(
-                path+"/add",
+                path,
                 params={
                     "datetime": timestamp,
                     "price_eur_mwh": price_eur_mwh

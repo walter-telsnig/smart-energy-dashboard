@@ -19,7 +19,7 @@ class PVData(BaseModel):
     production_kw: float
 
 #TODO: create functions for create, get, update and delete
-@router.post("/add")
+@router.post("")
 def create_data(datetime: datetime, production_kw: float):
     cursor.execute(
         "INSERT INTO pv (datetime, production_kw) VALUES (%s,%s)",
