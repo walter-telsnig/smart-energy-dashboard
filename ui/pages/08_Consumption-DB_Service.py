@@ -52,7 +52,6 @@ if isinstance(date_value, date):
 else:
     raise ValueError("No Date selected")
 
-result = None
 consumption_kwh_value = 0.0
 household_general_kwh_value = 0.0
 heat_pump_kwh_value = 0.0

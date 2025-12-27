@@ -2,7 +2,8 @@ import os
 import streamlit as st
 import requests
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, date
+from typing import cast
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
@@ -25,9 +26,9 @@ now = datetime.now()
 
 left, right = st.columns(2)
 with left:
-    start = st.date_input("Start", value=datetime(now.year, 1, 1))
+    start = cast(date, st.date_input("Start", value=datetime(now.year, 1, 1)))
 with right:
-    end = st.date_input("End", value=datetime(now.year, 1,1)+pd.Timedelta(days=7))
+    end = cast(date, st.date_input("End", value=datetime(now.year, 1,1)+pd.Timedelta(days=7)))
 
 start_ts = pd.Timestamp(start, tz="UTC")
 end_ts = pd.Timestamp(end, tz="UTC") + pd.Timedelta(days=1)
