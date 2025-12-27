@@ -43,9 +43,9 @@ def findData(date: datetime):
 
 date = st.date_input("Date:")
 if(option == "15 Minute"):
-    time = st.time_input("Time:", value="00:00", step=timedelta(minutes=15))
+    time = st.time_input("Time:", value="00:00", step=900)
 elif(option == "Hourly"):
-    time = st.time_input("Time:", value="00:00", step=timedelta(hours=1))
+    time = st.time_input("Time:", value="00:00", step=3600)
 
 timestamp = datetime(date.year, date.month, date.day, time.hour, time.minute, time.second, tzinfo=pytz.UTC)
 

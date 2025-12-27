@@ -36,7 +36,7 @@ def findData(date: datetime):
     return response   
 
 date = st.date_input("Date:")
-time = st.time_input("Time:", value="00:00", step=timedelta(hours=1))
+time = st.time_input("Time:", value="00:00", step=3600)
 
 timestamp = datetime(date.year, date.month, date.day, time.hour, time.minute, time.second, tzinfo=pytz.UTC)
 
