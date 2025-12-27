@@ -41,7 +41,7 @@ def findData(date: datetime):
     )
     return response  
 
-date_value = st.date_input("Date:")
+date_value = st.date_input("Date:", value=datetime(2025,1,1))
 if(option == "15 Minute"):
     time_value = st.time_input("Time:", value=time(0,0), step=timedelta(minutes=15))
 elif(option == "Hourly"):
@@ -75,7 +75,7 @@ if button_add:
             if response.status_code == 200:
                 st.write("Done")
             else:
-                st.write("Error: " + response.status_code)
+                st.write("Error: " + str(response.status_code))
         else:
             st.write("Exists already")
     else:
