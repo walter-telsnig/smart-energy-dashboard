@@ -1,6 +1,4 @@
 import pytest
-from fastapi.testclient import TestClient
-from app.main import create_app
 from infra.database import Base, engine
 import infra.models  # noqa: F401
 
