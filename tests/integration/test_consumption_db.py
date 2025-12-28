@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 from app.main import create_app
-from infra.models import Consumption
+from infra.models import Consumption as Consumption
 from datetime import datetime, timedelta
 
 client = TestClient(create_app())

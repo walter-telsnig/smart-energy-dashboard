@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 from app.main import create_app
-from infra.models import PV
+from infra.models import PV as PV
 from datetime import datetime, timedelta
 
 client = TestClient(create_app())

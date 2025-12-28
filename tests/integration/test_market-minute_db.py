@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 from app.main import create_app
-from infra.models import Market_Minute
+from infra.models import Market_Minute as Market_Minute
 from datetime import datetime, timedelta
 
 client = TestClient(create_app())
