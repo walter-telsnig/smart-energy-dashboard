@@ -3,11 +3,11 @@ from app.main import create_app
 from infra.models import Consumption as Consumption
 from datetime import datetime, timedelta
 
-client = TestClient(create_app())
+#client = TestClient(create_app())
 start = datetime(2025,1,1)
 end = start + timedelta(days=7)
 
-def test_consumption_db_get():
+def test_consumption_db_get(client):
     resp = client.get(
         "/api/dataManagment/consumption-db/list",
         params={
@@ -20,7 +20,7 @@ def test_consumption_db_get():
     data = resp.json()
     assert len(data) == 169
 
-def test_consumption_db_get_error():
+def test_consumption_db_get_error(client):
     resp = client.get(
         "/api/dataManagment/consumption-db/list",
     )
