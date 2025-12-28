@@ -1,6 +1,6 @@
 import pytest
 from infra.database import Base, engine
-import infra.models
+import infra.models # noqa: F401
 from sqlalchemy.orm import sessionmaker
 import time
 from psycopg2 import OperationalError
