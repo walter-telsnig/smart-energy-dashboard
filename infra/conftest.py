@@ -1,6 +1,12 @@
 import pytest
 from infra.database import Base, engine
-from infra.models import *  # registriert alle Modelle
+from infra.consumption import Consumption as Consumption
+from infra.consumption_minute import Consumption_Minute as Consumption_Minute
+from infra.market import Market as Market
+from infra.market_minute import Market_Minute as Market_Minute
+from infra.pv import PV as PV
+from infra.pv_minute import PV_Minute as PV_Minute
+from infra.weather import Weather as Weather
 from sqlalchemy.orm import sessionmaker
 import time
 from psycopg2 import OperationalError
