@@ -1,10 +1,19 @@
+import pytest
 from fastapi.testclient import TestClient
 from app.main import create_app
+from infra.database import Base, engine
 from datetime import datetime, timedelta
 
 client = TestClient(create_app())
 start = datetime(2025,1,1)
 end = start + timedelta(days=7)
+
+@pytest.fixture(scope="session", autouse=True)
+def create_test_db():
+    Base.metadata.create_all(bind=engine)
+    #Run test
+    yield
+    Base.metadata.drop_all(bind=engine)
 
 def test_pv_db_get():
     resp = client.get(
