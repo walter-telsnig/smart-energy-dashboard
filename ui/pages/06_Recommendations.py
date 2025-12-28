@@ -4,14 +4,24 @@ import requests
 import pandas as pd
 import streamlit as st
 import altair as alt
+import streamlit as st
+from utils.theme import apply_global_style, sidebar_nav
+
+st.set_page_config(layout="wide", page_title="Recommendations • Smart Energy Dashboard", page_icon="✅")
+
+apply_global_style()
+sidebar_nav(active="Recommendations")
+
+if "token" not in st.session_state or not st.session_state["token"]:
+    st.switch_page("pages/00_Login.py")
+
+def _auth_headers() -> dict:
+    tok = st.session_state.get("token")
+    return {"Authorization": f"Bearer {tok}"} if tok else {}
 
 
 API_BASE = "http://localhost:8000/api/v1"
 
-st.set_page_config(page_title="Energy Recommendations", layout="wide")
-
-if "token" not in st.session_state or not st.session_state["token"]:
-    st.switch_page("pages/00_Login.py")
 if "token" not in st.session_state or st.session_state["token"] is None:
     st.warning("Please log in to access this page.")
     st.stop()

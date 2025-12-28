@@ -7,7 +7,6 @@ import streamlit as st
 
 API_DEFAULT = "http://localhost:8000"
 
-
 # ---------------------------
 # Helpers
 # ---------------------------
@@ -15,13 +14,31 @@ def _hide_sidebar_for_landing() -> None:
     st.markdown(
         """
         <style>
-          section[data-testid="stSidebar"] { display: none !important; }
-          button[kind="header"] { display: none !important; }
-          .block-container { padding-top: 1.5rem; max-width: 1200px; }
+          /* Hide sidebar completely */
+          section[data-testid="stSidebar"] {
+            display: none !important;
+          }
+
+          /* Hide top header buttons */
+          button[kind="header"] {
+            display: none !important;
+          }
+
+          /* Page background (MATCH DASHBOARD) */
+          .stApp {
+            background: #e2edf6;
+          }
+
+          /* Centered content width */
+          .block-container {
+            padding-top: 2.5rem;
+            max-width: 1200px;
+          }
         </style>
         """,
         unsafe_allow_html=True,
     )
+
 
 
 def _api_base() -> str:
@@ -159,6 +176,21 @@ st.markdown(
         opacity: 0.92;
         margin-top: 2px;
       }
+      /* KPI cards base */
+  .kpi-card{
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 16px;
+    padding: 18px 18px;
+    box-shadow: 0 10px 22px rgba(18,38,63,0.06);
+  }
+
+  /* Colored KPI variants */
+  .kpi-card.kpi-pv { background: #FFF4DA !important; }            /* warm yellow */
+  .kpi-card.kpi-consumption { background: #EAF4FF !important; }    /* light blue */
+  .kpi-card.kpi-price { background: #F2EFFF !important; }          /* light purple */
+  .kpi-card.kpi-self { background: #EAFBEF !important; }           /* light green */
+
     </style>
     """,
     unsafe_allow_html=True,
@@ -177,8 +209,8 @@ left, right = st.columns([1.05, 1.25], gap="large")
 with left:
     # st.markdown('<div class="left-panel">', unsafe_allow_html=True)
 
-    st.markdown("## Welcome")
-    st.write("Sign in to continue or create a new account.")
+    st.markdown("## Sign In to Smart Energy ⚡")
+    st.write("New here? Please register to continue.")
 
     tab_login, tab_register = st.tabs(["Login", "Register"])
 
@@ -193,6 +225,7 @@ with left:
             if ok:
                 st.session_state["token"] = token
                 st.success("Welcome! Redirecting…")
+                st.session_state["auth_email"] = email.strip().lower()
                 time.sleep(0.3)
                 st.switch_page("app.py")
             else:
@@ -230,8 +263,7 @@ with left:
 with right:
     # st.markdown('<div class="right-panel">', unsafe_allow_html=True)
 
-    # st.markdown("## EVERYTHING AT A GLANCE")
-    # st.markdown("PV • Prices • Consumption • Battery • Compare • Recommendations")
+    st.markdown("## Quick Overview")
 
     st.markdown(
         """

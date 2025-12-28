@@ -13,23 +13,22 @@ import pandas as pd
 from pathlib import Path
 import requests
 from typing import List
+from utils.theme import apply_global_style, sidebar_nav
 
-st.set_page_config(page_title="PV • Smart Energy Dashboard", layout="wide")
+st.set_page_config(layout="wide", page_title="PV • Smart Energy Dashboard", page_icon="☀️")
 
-import streamlit as st
+apply_global_style()
+sidebar_nav(active="PV")
 
-if "token" not in st.session_state or not st.session_state["token"]:
+if "token" not in st.session_state or not st.session_state["token"]:   #auth gate, redirected to login
     st.switch_page("pages/00_Login.py")
 
-    
-st.set_page_config(layout="wide")
-
-if "token" not in st.session_state or st.session_state["token"] is None:
-    st.warning("Please log in to access this page.")
-    st.stop()
+#for protected endpoints
+def _auth_headers() -> dict:
+    tok = st.session_state.get("token")
+    return {"Authorization": f"Bearer {tok}"} if tok else {}
 
 st.title("☀️ PV Production")
-
 
 DATA_DIR = Path("infra/data/pv")
 DEFAULTS = [

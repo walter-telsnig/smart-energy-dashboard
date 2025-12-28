@@ -14,13 +14,7 @@ from app.api.v1.recommendations import router as recommendations_router
 from app.api.v1.consumption import router as consumption_router
 from app.api.v1.market import router as market_router
 from app.api.v1.battery import router as battery_router
-from app.api.v1.auth import router as auth_router
 
-
-<<<<<<< HEAD
-=======
-
->>>>>>> 1be127f8da18f1a3f2b62413646a1a4b0eea29f4
 def create_app() -> FastAPI:
     app = FastAPI(title="Smart Energy Dashboard API", version="0.1.0")
 

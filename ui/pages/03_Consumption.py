@@ -12,15 +12,24 @@ import requests
 from typing import List
 from pathlib import Path
 
+from utils.theme import apply_global_style, sidebar_nav
 
-st.set_page_config(layout="wide")
+st.set_page_config(layout="wide", page_title="Consumption • Smart Energy Dashboard", page_icon="🏠")
+
+apply_global_style()
+sidebar_nav(active="Consumption")
 
 if "token" not in st.session_state or not st.session_state["token"]:
     st.switch_page("pages/00_Login.py")
 
+def _auth_headers() -> dict:
+    tok = st.session_state.get("token")
+    return {"Authorization": f"Bearer {tok}"} if tok else {}
+
 if "token" not in st.session_state or st.session_state["token"] is None:
     st.warning("Please log in to access this page.")
     st.stop()
+
 st.title("🏠 Household Consumption")
 
 DATA_DIR = Path("infra/data/consumption")
