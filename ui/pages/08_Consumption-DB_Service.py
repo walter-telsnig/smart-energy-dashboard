@@ -14,6 +14,24 @@ if "token" not in st.session_state or st.session_state["token"] is None:
     st.stop()
 st.title("🏠 Household Consumption Service - Database Version")
 
+daten = {
+    "consumption_kwh_value": 0.0,
+    "household_general_kwh_value": 0.0,
+    "heat_pump_kwh_value": 0.0,
+    "ev_load_kwh_value": 0.0,
+    "household_base_kwh_value": 0.0,
+    "total_consumption_kwh_value": 0.0,
+    "battery_soc_kwh_value": 0.0,
+    "battery_charging_kwh_value": 0.0,
+    "battery_discharging_kwh_value": 0.0,
+    "grid_export_kwh_value": 0.0,
+    "grid_import_kwh_value": 0.0
+}
+
+for key, value in daten.items():
+    if key not in st.session_state:
+        st.session_state[key] = value
+
 option = st.selectbox("15 Minute/Hourly", ("15 Minute", "Hourly"))
 st.write("You selected:", option)
 
@@ -52,18 +70,6 @@ if isinstance(date_value, date):
 else:
     raise ValueError("No Date selected")
 
-consumption_kwh_value = 0.0
-household_general_kwh_value = 0.0
-heat_pump_kwh_value = 0.0
-ev_load_kwh_value = 0.0
-household_base_kwh_value = 0.0
-total_consumption_kwh_value = 0.0
-battery_soc_kwh_value = 0.0
-battery_charging_kwh_value = 0.0
-battery_discharging_kwh_value = 0.0
-grid_export_kwh_value = 0.0
-grid_import_kwh_value = 0.0
-
 if button_find:
     result = findData(timestamp)
     if result.status_code == 200:
@@ -72,35 +78,35 @@ if button_find:
                 df = pd.DataFrame(result.json(), columns=["datetime", "consumption_kwh", "household_general_kwh", "heat_pump_kwh", "ev_load_kwh", "household_base_kwh", "total_consumption_kwh", "battery_soc_kwh", "battery_charging_kwh", "battery_discharging_kwh", "grid_export_kwh", "grid_import_kwh"])
                 df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
 
-                household_general_kwh_value = df["household_general_kwh"][0]
-                heat_pump_kwh_value = df["heat_pump_kwh"][0]
-                ev_load_kwh_value = df["ev_load_kwh"][0]
-                household_base_kwh_value = df["household_base_kwh"][0]
-                total_consumption_kwh_value = df["total_consumption_kwh"][0]
-                battery_soc_kwh_value = df["battery_soc_kwh"][0]
-                battery_charging_kwh_value = df["battery_charging_kwh"][0]
-                battery_discharging_kwh_value = df["battery_discharging_kwh"][0]
-                grid_export_kwh_value = df["grid_export_kwh"][0]
-                grid_import_kwh_value = df["grid_import_kwh"][0]
+                st.session_state.household_general_kwh_value = df["household_general_kwh"][0]
+                st.session_state.heat_pump_kwh_value = df["heat_pump_kwh"][0]
+                st.session_state.ev_load_kwh_value = df["ev_load_kwh"][0]
+                st.session_state.household_base_kwh_value = df["household_base_kwh"][0]
+                st.session_state.total_consumption_kwh_value = df["total_consumption_kwh"][0]
+                st.session_state.battery_soc_kwh_value = df["battery_soc_kwh"][0]
+                st.session_state.battery_charging_kwh_value = df["battery_charging_kwh"][0]
+                st.session_state.battery_discharging_kwh_value = df["battery_discharging_kwh"][0]
+                st.session_state.grid_export_kwh_value = df["grid_export_kwh"][0]
+                st.session_state.grid_import_kwh_value = df["grid_import_kwh"][0]
             elif(option == "Hourly"):
                 df = pd.DataFrame(result.json(), columns=["datetime", "consumption_kwh"])
                 df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
 
-            consumption_kwh_value = df["consumption_kwh"][0]
+            st.session_state.consumption_kwh_value = df["consumption_kwh"][0]
 
 if(option == "15 Minute"):
-    household_general_kwh = st.number_input("Household General Kilowatt per Hour:", value=household_general_kwh_value, format="%0.5f")
-    heat_pump_kwh = st.number_input("Heatpump Kilowatt per Hour:", value=heat_pump_kwh_value, format="%0.5f")
-    ev_load_kwh = st.number_input("EV Load Kilowatt per Hour:", value=ev_load_kwh_value, format="%0.5f")
-    household_base_kwh = st.number_input("Household Base Kilowatt per Hour:", value=household_base_kwh_value, format="%0.5f")
-    total_consumption_kwh = st.number_input("Total Consumption Kilowatt per Hour:", value=total_consumption_kwh_value, format="%0.5f")
-    battery_soc_kwh = st.number_input("Battery State of Charge Kilowatt per Hour:", value=battery_soc_kwh_value, format="%0.5f")
-    battery_charging_kwh = st.number_input("Battery Charging Kilowatt per Hour:", value=battery_charging_kwh_value, format="%0.5f")
-    battery_discharging_kwh = st.number_input("Battery Discharging Kilowatt per Hour:", value=battery_discharging_kwh_value, format="%0.5f")
-    grid_export_kwh = st.number_input("Grid Export Kilowatt per Hour:", value=grid_export_kwh_value, format="%0.5f")
-    grid_import_kwh = st.number_input("Grid Import Kilowatt per Hour:", value=grid_import_kwh_value, format="%0.5f")
+    household_general_kwh = st.number_input("Household General Kilowatt per Hour:", key="household_general_kwh_value", format="%0.5f")
+    heat_pump_kwh = st.number_input("Heatpump Kilowatt per Hour:", key="heat_pump_kwh_value", format="%0.5f")
+    ev_load_kwh = st.number_input("EV Load Kilowatt per Hour:", key="ev_load_kwh_value", format="%0.5f")
+    household_base_kwh = st.number_input("Household Base Kilowatt per Hour:", key="household_base_kwh_value", format="%0.5f")
+    total_consumption_kwh = st.number_input("Total Consumption Kilowatt per Hour:", key="total_consumption_kwh_value", format="%0.5f")
+    battery_soc_kwh = st.number_input("Battery State of Charge Kilowatt per Hour:", key="battery_soc_kwh_value", format="%0.5f")
+    battery_charging_kwh = st.number_input("Battery Charging Kilowatt per Hour:", key="battery_charging_kwh_value", format="%0.5f")
+    battery_discharging_kwh = st.number_input("Battery Discharging Kilowatt per Hour:", key="battery_discharging_kwh_value", format="%0.5f")
+    grid_export_kwh = st.number_input("Grid Export Kilowatt per Hour:", key="grid_export_kwh_value", format="%0.5f")
+    grid_import_kwh = st.number_input("Grid Import Kilowatt per Hour:", key="grid_import_kwh_value", format="%0.5f")
 
-consumption_kwh = st.number_input("Consumption Kilowatt per Hour:", value=consumption_kwh_value, format="%0.5f")
+consumption_kwh = st.number_input("Consumption Kilowatt per Hour:", key="consumption_kwh_value", format="%0.5f")
 
 if button_add:
     result = findData(timestamp)

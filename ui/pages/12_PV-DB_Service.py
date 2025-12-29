@@ -14,6 +14,9 @@ if "token" not in st.session_state or st.session_state["token"] is None:
     st.stop()
 st.title("☀️ PV Production Service - DB Version")
 
+if "production_kw" not in st.session_state:
+    st.session_state.production_kw = 0.0
+
 option = st.selectbox("15 Minute/Hourly", ("15 Minute", "Hourly"))
 st.write("You selected:", option)
 
@@ -52,17 +55,15 @@ if isinstance(date_value, date):
 else:
     raise ValueError("No Date selected")
 
-production_kw_value = 0.0
-
 if button_find:
     result = findData(timestamp)
     if result.status_code == 200:
         if len(result.json()) > 0:
             df = pd.DataFrame(result.json(), columns=["datetime", "production_kw"])
             df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
-            production_kw_value = df["production_kw"][0]
+            st.session_state.production_kw_value = df["production_kw"][0]
 
-production_kw = st.number_input("Production Kilowatt:", value=production_kw_value, format="%0.5f")
+production_kw = st.number_input("Production Kilowatt:", key="production_kw_value", format="%0.5f")
 
 if button_add:
     result = findData(timestamp)
