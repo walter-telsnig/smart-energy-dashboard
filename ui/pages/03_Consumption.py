@@ -17,7 +17,7 @@ st.set_page_config(layout="wide")
 if "token" not in st.session_state or st.session_state["token"] is None:
     st.warning("Please log in to access this page.")
     st.stop()
-st.title("🏠 Household Consumption")
+st.title("🏠 Household Consumption - CSV Version")
 
 DATA_DIR = Path("infra/data/consumption")
 DEFAULTS = [

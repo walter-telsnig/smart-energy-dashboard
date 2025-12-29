@@ -1,0 +1,132 @@
+import os
+import streamlit as st
+import requests
+import pandas as pd
+import pytz
+from datetime import datetime, time, timedelta, date
+
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
+
+st.set_page_config(layout="wide")
+
+if "token" not in st.session_state or st.session_state["token"] is None:
+    st.warning("Please log in to access this page.")
+    st.stop()
+st.title("☀️ PV Production Service - DB Version")
+
+option = st.selectbox("15 Minute/Hourly", ("15 Minute", "Hourly"))
+st.write("You selected:", option)
+
+if option == "15 Minute":
+    path = f"{API_BASE_URL}/api/dataManagment/pv_minute-db"
+elif option == "Hourly":
+    path = f"{API_BASE_URL}/api/dataManagment/pv-db"
+
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+    button_add = st.button("Add Data")
+with col2:
+    button_find = st.button("Find Data")
+with col3:
+    button_edit = st.button("Edit Data")
+with col4:
+    button_delete = st.button("Delete Data")
+
+def findData(date: datetime):
+    response = requests.get(
+        path,
+        params={
+            "date_value": date.isoformat()
+        }
+    )
+    return response  
+
+date_value = st.date_input("Date:", value=datetime(2025,1,1))
+if(option == "15 Minute"):
+    time_value = st.time_input("Time:", value=time(0,0), step=timedelta(minutes=15))
+elif(option == "Hourly"):
+    time_value = st.time_input("Time:", value=time(0,0), step=timedelta(hours=1))
+
+if isinstance(date_value, date):
+    timestamp = datetime(date_value.year, date_value.month, date_value.day, time_value.hour, time_value.minute, time_value.second, tzinfo=pytz.UTC)
+else:
+    raise ValueError("No Date selected")
+
+production_kw_value = 0.0
+
+if button_find:
+    result = findData(timestamp)
+    if result.status_code == 200:
+        if len(result.json()) > 0:
+            df = pd.DataFrame(result.json(), columns=["datetime", "production_kw"])
+            df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
+            production_kw_value = df["production_kw"][0]
+
+production_kw = st.number_input("Production Kilowatt:", value=production_kw_value, format="%0.5f")
+
+if button_add:
+    result = findData(timestamp)
+    if result.status_code == 200:
+        if len(result.json()) == 0:
+            response = requests.post(
+                path,
+                params={
+                    "datetime": timestamp.isoformat(),
+                    "production_kw": str(production_kw)
+                }
+            )
+            if response.status_code == 200:
+                st.write("Done")
+            else:
+                st.write("Error: " + str(response.status_code))
+        else:
+            st.write("Exists already")
+    else:
+        st.write("Error: " + str(result.status_code))
+elif button_find:
+    if result.status_code == 200:
+        if len(result.json()) > 0:
+            st.dataframe(df, hide_index=True)
+        else:
+            st.write("No Data")
+    else:
+        st.write("Error: " + str(result.status_code))
+elif button_edit:
+    result = findData(timestamp)
+    if result.status_code == 200:
+        if len(result.json())>0:
+            response = requests.put(
+                path,
+                params={
+                    "datetime": timestamp.isoformat(),
+                    "production_kw": str(production_kw)
+                }
+            )
+
+            if response.status_code == 200:
+                st.write("Done")
+            else:
+                st.write("Error: " + str(response.status_code))
+        else:
+            st.write("There is no such data. Please add it")
+    else:
+        st.write("Error: " + str(result.status_code))
+elif button_delete:
+    result = findData(timestamp)
+    if result.status_code == 200:
+        if len(result.json()) > 0:
+            response = requests.delete(
+                path,
+                params={
+                    "date_value": timestamp.isoformat()
+                }
+            )
+
+            if response.status_code == 200:
+                st.write("Done")
+            else:
+                st.write("Error: " + str(result.status_code))
+        else:
+            st.write("There is no such data.")
+    else:
+        st.write("Error: " + str(result.status_code))
