@@ -14,6 +14,15 @@ if "token" not in st.session_state or st.session_state["token"] is None:
     st.stop()
 st.title(":cloud: Weather Service - DB Version")
 
+daten = {
+    "temp_c": 0.0,
+    "cloud_cover_pct": 0.0
+}
+
+for key, value in daten.items():
+    if key not in st.session_state:
+        st.session_state[key] = value
+
 path = f"{API_BASE_URL}/api/dataManagment/weather-db"
 
 col1, col2, col3, col4 = st.columns(4)
@@ -43,20 +52,17 @@ if isinstance(date_value, date):
 else:
     raise ValueError("No Date selected")
     
-temp_c_value = 0.0
-cloud_cover_pct_value = 0.0
-
 if button_find:
     result = findData(timestamp)
     if result.status_code == 200:
         if len(result.json()) > 0:
             df = pd.DataFrame(result.json(), columns=["datetime", "temp_c", "cloud_cover_pct"])
             df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
-            temp_c_value = df["temp_c"][0]
-            cloud_cover_pct_value = df["cloud_cover_pct"][0]
+            st.session_state.temp_c_value = df["temp_c"][0]
+            st.session_state.cloud_cover_pct_value = df["cloud_cover_pct"][0]
 
-temp_c = st.number_input("Temperature Celsius:", value=temp_c_value, format="%0.2f")
-cloud_cover_pct = st.number_input("Cloud Cover in %:", value=cloud_cover_pct_value, format="%0.2f")
+temp_c = st.number_input("Temperature Celsius:", key="temp_c_value", format="%0.2f")
+cloud_cover_pct = st.number_input("Cloud Cover in %:", key="cloud_cover_pct_value", format="%0.2f")
 
 if button_add:
     if cloud_cover_pct > 100:
