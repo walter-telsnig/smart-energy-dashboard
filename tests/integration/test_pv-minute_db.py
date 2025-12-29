@@ -1,3 +1,5 @@
+import pytz
+import numpy as np
 from fastapi.testclient import TestClient
 from app.main import create_app
 from infra.models import PV_Minute as PV_Minute
@@ -6,10 +8,54 @@ from datetime import datetime, timedelta
 client = TestClient(create_app())
 start = datetime(2025,1,1)
 end = start + timedelta(days=7)
+path = "/api/dataManagment/pv_minute-db"
+date = datetime(2028, 12, 31, 0, 0, 0, tzinfo=pytz.UTC)
+
+def test_pv_minute_db_add():
+    resp = client.post(
+        path,
+        params={
+            "datetime": date,
+            "production_kw": 0.0
+        }
+    )
+    assert resp.status_code == 200
 
 def test_pv_minute_db_get():
     resp = client.get(
-        "/api/dataManagment/pv_minute-db/list",
+        path,
+        params={
+            "date_value": date
+        },
+    )
+    assert resp.status_code == 200
+
+    data = resp.json()
+    assert len(data) == 1
+    assert isinstance(data, list)
+
+def test_pv_minute_db_edit():
+    resp = client.put(
+        path,
+        params={
+            "datetime": date,
+            "production_kw": np.random.random()
+        }
+    )
+    assert resp.status_code == 200
+
+def test_pv_minute_db_delete():
+    resp = client.delete(
+            path,
+            params={
+                "date_value": date
+            }
+        )
+    assert resp.status_code == 200
+
+def test_pv_minute_db_get_list():
+    resp = client.get(
+        path + "/list",
         params={
             "start": start,
             "end": end
@@ -22,7 +68,14 @@ def test_pv_minute_db_get():
 
 def test_pv_minute_db_get_error():
     resp = client.get(
-        "/api/dataManagment/pv_minute-db/list",
+        path,
+    )
+
+    assert resp.status_code != 200
+
+def test_pv_minute_db_get_error_list():
+    resp = client.get(
+        path + "/list",
     )
 
     assert resp.status_code != 200
