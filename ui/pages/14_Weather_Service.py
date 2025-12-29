@@ -80,24 +80,25 @@ if button_add:
                     }
                 )
                 if response.status_code == 200:
-                    st.write("Done")
+                    st.toast("Done", icon=":material/thumb_up:")
                 else:
-                    st.write("Error: " + str(response.status_code))
+                    st.toast("Error: " + str(response.status_code), icon=":material/exclamation:")
             else:
-                st.write("Exists already")
+                st.toast("Exists already", icon=":material/exclamation:")
         else:
-            st.write("Error: " + str(result.status_code))
+            st.toast("Error: " + str(result.status_code), icon=":material/exclamation:")
 elif button_find:
     if result.status_code == 200:
         if len(result.json()) > 0:
             st.dataframe(df, hide_index=True)
+            st.toast("Success", icon=":material/thumb_up:")
         else:
-            st.write("No Data")
+            st.toast("No Data", icon=":material/exclamation:")
     else:
-        st.write("Error: " + str(result.status_code))
+        st.toast("Error: " + str(result.status_code), icon=":material/exclamation:")
 elif button_edit:
     if cloud_cover_pct > 100:
-        st.write("Please take a number equal or less than 100")
+        st.toast("Please take a number equal or less than 100", icon=":material/exclamation:")
     else:
         result = findData(timestamp)
         if result.status_code == 200:
@@ -112,13 +113,13 @@ elif button_edit:
                 )
 
                 if response.status_code == 200:
-                    st.write("Done")
+                    st.toast("Done", icon=":material/thumb_up:")
                 else:
-                    st.write("Error: " + str(response.status_code))
+                    st.toast("Error: " + str(response.status_code), icon=":material/exclamation:")
             else:
-                st.write("There is no such data. Please add it")
+                st.toast("There is no such data. Please add it", icon=":material/exclamation:")
         else:
-            st.write("Error: " + str(result.status_code)) 
+            st.toast("Error: " + str(result.status_code), icon=":material/exclamation:")
 elif button_delete:
     result = findData(timestamp)
     if result.status_code == 200:
@@ -131,10 +132,10 @@ elif button_delete:
             )
 
             if response.status_code == 200:
-                st.write("Done")
+                st.toast("Done", icon=":material/thumb_up:")
             else:
-                st.write("Error: " + str(result.status_code))
+                st.toast("Error: " + str(result.status_code), icon=":material/exclamation:")
         else:
-            st.write("There is no such data.")
+            st.toast("There is no such data.", icon=":material/exclamation:")
     else:
-        st.write("Error: " + str(result.status_code))
+        st.toast("Error: " + str(result.status_code), icon=":material/exclamation:")
