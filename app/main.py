@@ -12,6 +12,13 @@ from app.api.v1.timeseries import router as timeseries_router
 from app.api.v1.forecast import router as forecast_router
 from app.api.v1.recommendations import router as recommendations_router
 from app.api.v1.consumption import router as consumption_router
+from app.api.dataManagement.consumption import router as consumption_router_db
+from app.api.dataManagement.consumption_minute import router as consumption_minute_router_db
+from app.api.dataManagement.market import router as market_router_db
+from app.api.dataManagement.market_minute import router as market_minute_router_db
+from app.api.dataManagement.pv import router as pv_router_db
+from app.api.dataManagement.pv_minute import router as pv_minute_router_db
+from app.api.dataManagement.weather import router as weather_router_db
 from app.api.v1.market import router as market_router
 from app.api.v1.battery import router as battery_router
 
@@ -30,6 +37,13 @@ def create_app() -> FastAPI:
     app.include_router(forecast_router, prefix="/api/v1")
     app.include_router(recommendations_router, prefix="/api/v1")
     app.include_router(consumption_router, prefix="/api/v1")
+    app.include_router(consumption_router_db, prefix="/api/dataManagment")
+    app.include_router(consumption_minute_router_db, prefix="/api/dataManagment")
+    app.include_router(market_router_db, prefix="/api/dataManagment")
+    app.include_router(market_minute_router_db, prefix="/api/dataManagment")
+    app.include_router(pv_router_db, prefix="/api/dataManagment")
+    app.include_router(pv_minute_router_db, prefix="/api/dataManagment")
+    app.include_router(weather_router_db, prefix="/api/dataManagment")
     app.include_router(market_router, prefix="/api/v1")
     app.include_router(battery_router, prefix="/api/v1")
 
