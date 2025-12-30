@@ -12,6 +12,7 @@ import requests
 from typing import List
 from pathlib import Path
 from utils.theme import apply_global_style, sidebar_nav
+from utils.auth import auth_headers
 
 st.set_page_config(layout="wide", page_title="Prices • Smart Energy Dashboard", page_icon="💶")
 
@@ -41,7 +42,11 @@ DEFAULTS = [
 @st.cache_data(show_spinner=True)
 def price_catalog_api(base: str) -> List[str]:
     url = f"{base}/api/v1/market/catalog"
-    r = requests.get(url, timeout=5)
+    r = requests.get(
+    url,
+    timeout=10,
+    headers=auth_headers(),
+)
     r.raise_for_status()
     data = r.json()
     return [item["key"] for item in data.get("items", [])]
@@ -51,7 +56,13 @@ def price_range_api(base: str, key: str, start: str, end: str) -> pd.DataFrame:
     if not key:
         return pd.DataFrame()
     url = f"{base}/api/v1/market/range"
-    r = requests.get(url, params={"key": key, "start": start, "end": end}, timeout=10)
+    # r = requests.get(url, params={"key": key, "start": start, "end": end}, timeout=10)
+    r = requests.get(
+    url,
+    params={"key": key, "start": start, "end": end},
+    timeout=15,
+    headers=auth_headers(),  #JWT header
+)
     r.raise_for_status()
     rows = r.json().get("rows", [])
     if not rows:

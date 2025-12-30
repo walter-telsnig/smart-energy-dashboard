@@ -17,6 +17,7 @@ import pandas as pd
 import requests
 import streamlit as st
 from utils.theme import apply_global_style, sidebar_nav
+from utils.auth import auth_headers
 
 st.set_page_config(layout="wide", page_title="Battery Sim • Smart Energy Dashboard", page_icon="🔋")
 

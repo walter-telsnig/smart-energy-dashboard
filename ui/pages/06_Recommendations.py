@@ -4,8 +4,9 @@ import requests
 import pandas as pd
 import streamlit as st
 import altair as alt
-import streamlit as st
 from utils.theme import apply_global_style, sidebar_nav
+from utils.auth import auth_headers
+
 
 st.set_page_config(layout="wide", page_title="Recommendations • Smart Energy Dashboard", page_icon="✅")
 

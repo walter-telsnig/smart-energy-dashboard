@@ -14,6 +14,7 @@ from pathlib import Path
 import requests
 from typing import List
 from utils.theme import apply_global_style, sidebar_nav
+from utils.auth import auth_headers
 
 st.set_page_config(layout="wide", page_title="PV • Smart Energy Dashboard", page_icon="☀️")
 
@@ -22,11 +23,6 @@ sidebar_nav(active="PV")
 
 if "token" not in st.session_state or not st.session_state["token"]:   #auth gate, redirected to login
     st.switch_page("pages/00_Login.py")
-
-#for protected endpoints
-def _auth_headers() -> dict:
-    tok = st.session_state.get("token")
-    return {"Authorization": f"Bearer {tok}"} if tok else {}
 
 st.title("☀️ PV Production")
 
@@ -92,7 +88,13 @@ def pv_catalog_api(base: str) -> List[str]:
     Return list of keys.
     """
     url = f"{base}/api/v1/pv/catalog"
-    r = requests.get(url, timeout=10)
+    # r = requests.get(url, timeout=10)
+    r = requests.get(
+    url,
+    timeout=10,
+    headers=auth_headers(),
+    )
+
     r.raise_for_status()
     data = r.json()
     if isinstance(data, dict) and "items" in data and isinstance(data["items"], list):
@@ -116,7 +118,14 @@ def pv_range_api(base: str, key: str, start: str, end: str) -> pd.DataFrame:
     url = f"{base}/api/v1/pv/range"
     params = [("key", key), ("start", start), ("end", end)]
     
-    r = requests.get(url, params=params, timeout=15)
+    # r = requests.get(url, params=params, timeout=15)
+    r = requests.get(
+    url,
+    params=params,
+    timeout=15,
+    headers=auth_headers(),
+    )
+
     r.raise_for_status()
     data = r.json()
     rows = data.get("rows", [])

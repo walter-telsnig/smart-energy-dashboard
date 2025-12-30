@@ -153,16 +153,18 @@ st.markdown(
 # Sidebar Navigation 
 # ---------------------------
 with st.sidebar:
-    st.markdown('<div class="sb-group">Reporting</div>', unsafe_allow_html=True)
-    view_mode = st.radio("Data Range", ["Daily View", "Hourly View"], index=1, label_visibility="collapsed")
+    # st.markdown('<div class="sb-group">Reporting</div>', unsafe_allow_html=True)
+    # view_mode = st.radio("Data Range", ["Daily View", "Hourly View"], index=1, label_visibility="collapsed")
+    view_mode = st.session_state.get("view_mode", "Hourly View")
 
-    st.markdown('<div class="sb-group">Settings</div>', unsafe_allow_html=True)
+
+    # st.markdown('<div class="sb-group">Settings</div>', unsafe_allow_html=True)
     # # st.session_state["api_base"] = st.text_input("API Base", value=_api_base())
 
-    st.divider()
-    if st.button("Sign out", use_container_width=True):
-        st.session_state["token"] = None
-        st.switch_page("pages/00_Login.py")
+    # st.divider()
+    # if st.button("Sign out", use_container_width=True):
+    #     st.session_state["token"] = None
+    #     st.switch_page("pages/00_Login.py")
 
 
 # ---------------------------

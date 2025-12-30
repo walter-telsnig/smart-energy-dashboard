@@ -12,77 +12,71 @@ def apply_global_style() -> None:
         <style>
           /* Hide Streamlit default multipage nav */
           [data-testid="stSidebarNav"] { display: none !important; }
+          [data-testid="stSidebarNavItems"] { display: none !important; }
 
-          /* Page background */
+          /* App background + layout */
           .stApp { background: #f6f8fb; }
-
-          .block-container {
-            padding-top: 1.5rem;
-            max-width: 1250px;
-          }
+          .block-container { padding-top: 1.5rem; max-width: 1250px; }
 
           /* Sidebar background */
-          section[data-testid="stSidebar"] {
-            background: linear-gradient(180deg, #0b2d4a 0%, #0a2440 100%);
+          section[data-testid="stSidebar"]{
+            background: linear-gradient(180deg, #0b2d4a 0%, #0a2440 100%) !important;
+            border-right: 1px solid rgba(255,255,255,0.08);
           }
 
-          /* Sidebar header text (keep white) */
-          section[data-testid="stSidebar"] h1,
-          section[data-testid="stSidebar"] h2,
-          section[data-testid="stSidebar"] h3,
-          section[data-testid="stSidebar"] .stCaptionContainer,
-          section[data-testid="stSidebar"] .stMarkdown {
-            color: #ffffff !important;
+          /* Make ALL sidebar text readable (fix “REPORTING/SETTINGS not visible”) */
+          section[data-testid="stSidebar"] * { color: #eaf2ff !important; }
+
+          /* Sidebar spacing */
+          section[data-testid="stSidebar"] .block-container{
+            padding-top: 1.2rem;
+            padding-bottom: 1.2rem;
           }
 
-          /* =========================
-             NAV BUTTONS
-             ========================= */
+          /* Sidebar header text */
+          .sb-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+            margin-bottom: 0.2rem;
+          }
+          .sb-subtitle {
+            font-size: 0.85rem;
+            opacity: 0.80;
+            margin-bottom: 0.9rem;
+          }
+          .sb-group {
+            margin-top: 0.9rem;
+            margin-bottom: 0.45rem;
+            font-size: 0.78rem;
+            letter-spacing: 0.14em;
+            opacity: 0.95;
+            font-weight: 800;
+            text-transform: uppercase;
+          }
 
-          /* Style the actual Streamlit button */
-          section[data-testid="stSidebar"] .nav-btn div.stButton > button {
-            width: 100% !important;
-            border-radius: 14px !important;
-            padding: 14px 16px !important;
-            border: 1px solid rgba(255,255,255,0.15) !important;
-            background: rgba(255,255,255,0.92) !important;
+          /* Sidebar buttons (dark style like your Dashboard) */
+          section[data-testid="stSidebar"] .stButton>button{
+            width: 100%;
+            border-radius: 12px !important;
+            border: 1px solid rgba(255,255,255,0.10) !important;
+            background: rgba(255,255,255,0.06) !important;
+            padding: 0.70rem 0.85rem !important;
             text-align: left !important;
+            font-weight: 650 !important;
           }
-          section[data-testid="stSidebar"] .nav-btn div.stButton > button p,
-          section[data-testid="stSidebar"] .nav-btn div.stButton > button span {
-            color: #0f172a !important;   
-            opacity: 1 !important;      
-            font-weight: 800 !important;
-            margin: 0 !important;
+          section[data-testid="stSidebar"] .stButton>button:hover{
+            background: rgba(255,255,255,0.12) !important;
+            border-color: rgba(255,255,255,0.18) !important;
           }
 
-          /* Hover */
-          section[data-testid="stSidebar"] .nav-btn div.stButton > button:hover {
-            background: #f1f5f9 !important;
-          }
-
-          /* ACTIVE button wrapper -> red button */
-          section[data-testid="stSidebar"] .nav-btn.active div.stButton > button {
-            background: #ff4d4f !important;
-            border: 1px solid rgba(255,255,255,0.25) !important;
-          }
-
-          /* ACTIVE text -> white */
-          section[data-testid="stSidebar"] .nav-btn.active div.stButton > button p,
-          section[data-testid="stSidebar"] .nav-btn.active div.stButton > button span {
-            color: #ffffff !important;
-            opacity: 1 !important;
-          }
-
-          /* =========================
-             KPI cards (optional)
-             ========================= */
-          .kpi-card {
+          /* KPI cards */
+          .kpi-card{
             background: #ffffff !important;
             border: 1px solid rgba(0,0,0,0.06) !important;
             border-radius: 16px !important;
             padding: 18px 18px !important;
-            box-shadow: 0 10px 22px rgba(18, 38, 63, 0.06) !important;
+            box-shadow: 0 10px 22px rgba(18,38,63,0.06) !important;
           }
           .kpi-card.kpi-pv { background: #FFF4DA !important; }
           .kpi-card.kpi-consumption { background: #EAF4FF !important; }
@@ -92,32 +86,26 @@ def apply_global_style() -> None:
           .kpi-title { font-size: 0.9rem; opacity: 0.7; margin-bottom: 6px; }
           .kpi-value { font-size: 1.7rem; font-weight: 800; }
           .kpi-sub { font-size: 0.9rem; opacity: 0.65; margin-top: 6px; }
-
-          /* Inputs */
-          .stTextInput input, .stNumberInput input { border-radius: 12px !important; }
-          .stButton button { border-radius: 12px !important; font-weight: 700 !important; }
-
         </style>
         """,
         unsafe_allow_html=True,
     )
-
-
 def sidebar_nav(active: str = "Dashboard") -> None:
-    """
-    Styled sidebar nav. Pass active="PV"/"Prices"/etc. to highlight current page.
-    """
+    from utils.settings import load_settings  # local import = minimal side effects
+
+    # Initialize default view_mode once per session (do not override user changes)
+    if "view_mode" not in st.session_state:
+        st.session_state["view_mode"] = load_settings().get("default_view_mode", "Hourly View")
+
     with st.sidebar:
-        st.markdown("## Smart Energy Dashboard")
-        st.caption("Track, analyze, optimize your energy.")
-        st.markdown("---")
+        st.markdown('<div class="sb-title">Smart Energy Dashboard</div>', unsafe_allow_html=True)
+        st.markdown('<div class="sb-subtitle">Track, analyze, optimize your energy.</div>', unsafe_allow_html=True)
 
-        def nav_button(label: str, target: str | None, key: str):
-            wrapper_class = "nav-btn active" if label == active else "nav-btn"
-
-            st.markdown(f'<div class="{wrapper_class}">', unsafe_allow_html=True)
-            clicked = st.button(label, use_container_width=True, key=key)
-            st.markdown("</div>", unsafe_allow_html=True)
+        def nav_btn(label: str, target: str | None, key: str):
+            if label == active:
+                clicked = st.button(label, use_container_width=True, key=key, type="primary")
+            else:
+                clicked = st.button(label, use_container_width=True, key=key)
 
             if clicked:
                 if target is None:
@@ -125,16 +113,27 @@ def sidebar_nav(active: str = "Dashboard") -> None:
                 else:
                     st.switch_page(target)
 
-        # NOTE: active must match the label string exactly
-        nav_button("🏠  Dashboard", None, key="nav_dashboard")
-        nav_button("☀️  PV", "pages/01_PV.py", key="nav_pv")
-        nav_button("💶  Prices", "pages/02_Prices.py", key="nav_prices")
-        nav_button("🏠  Consumption", "pages/03_Consumption.py", key="nav_consumption")
-        nav_button("📊  Compare", "pages/04_Compare.py", key="nav_compare")
-        nav_button("✅  Recommendations", "pages/06_Recommendations.py", key="nav_reco")
-        nav_button("🔋  Battery Sim", "pages/99_Battery_Sim.py", key="nav_battery")
+        nav_btn("🏠  Dashboard", "app.py", "nav_dashboard")
+        nav_btn("☀️  PV", "pages/01_PV.py", "nav_pv")
+        nav_btn("💶  Prices", "pages/02_Prices.py", "nav_prices")
+        nav_btn("🏠  Consumption", "pages/03_Consumption.py", "nav_consumption")
+        nav_btn("📊  Compare", "pages/04_Compare.py", "nav_compare")
+        nav_btn("✅  Recommendations", "pages/06_Recommendations.py", "nav_reco")
+        nav_btn("🔋  Battery Sim", "pages/99_Battery_Sim.py", "nav_battery")
 
-        # st.markdown("---")
-        # if st.button("Logout", use_container_width=True, key="nav_logout"):
-        #     st.session_state["token"] = None
-        #     st.switch_page("pages/00_Login.py")
+        # NEW: Settings page (minimal)
+        nav_btn("⚙️  Settings", "pages/07_Settings.py", "nav_settings")
+
+        st.markdown('<div class="sb-group">Reporting</div>', unsafe_allow_html=True)
+
+        st.session_state["view_mode"] = st.radio(
+            "Data Range",
+            ["Daily View", "Hourly View"],
+            index=1 if st.session_state.get("view_mode") != "Daily View" else 0,
+            label_visibility="collapsed",
+        )
+
+        st.divider()
+        if st.button("Sign out", use_container_width=True, key="nav_signout"):
+            st.session_state["token"] = None
+            st.switch_page("pages/00_Login.py")

@@ -14,8 +14,9 @@ import platform
 import pandas as pd
 import requests
 from typing import List, Tuple
-import streamlit as st
 from utils.theme import apply_global_style, sidebar_nav
+from utils.auth import auth_headers
+
 
 st.set_page_config(layout="wide", page_title="Health • Smart Energy Dashboard", page_icon="🩺")
 
