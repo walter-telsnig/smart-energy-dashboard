@@ -63,7 +63,7 @@ jobs:
 
       - name: Type check (mypy)
         run: |
-          mypy .
+          mypy --config-file mypy.ini .
 
       # ✅ Option A: reliable coverage generation (ignores integration tests)
       - name: Test (Pytest) + Coverage (unit tests only)
