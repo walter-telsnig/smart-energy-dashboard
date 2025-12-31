@@ -50,7 +50,7 @@ def load_recommendations(hours: int, battery_enabled: bool) -> pd.DataFrame:
         "hours": str(int(hours)),
         "battery_enabled": _bool_param(battery_enabled),
     }
-    resp = requests.get(f"{API_BASE}/recommendations", params=params, timeout=10)
+    resp = requests.get(f"{API_BASE}/recommendations", params=params, timeout=10, headers=auth_headers())
     resp.raise_for_status()
 
     data = resp.json()
@@ -68,7 +68,7 @@ def load_cost_summary(hours: int, battery_enabled: bool) -> dict:
         "hours": str(int(hours)),
         "battery_enabled": _bool_param(battery_enabled),
     }
-    resp = requests.get(f"{API_BASE}/recommendations/cost-summary", params=params, timeout=10)
+    resp = requests.get(f"{API_BASE}/recommendations/cost-summary", params=params, timeout=10, headers=auth_headers())
     resp.raise_for_status()
     return resp.json()
 
@@ -79,7 +79,7 @@ def load_timeseries_window(hours: int) -> pd.DataFrame:
         "window": "true",
         "hours": str(int(hours)),
     }
-    resp = requests.get(f"{API_BASE}/timeseries/merged", params=params, timeout=10)
+    resp = requests.get(f"{API_BASE}/timeseries/merged", params=params, timeout=10, headers=auth_headers())
     resp.raise_for_status()
 
     df = pd.DataFrame(resp.json())
