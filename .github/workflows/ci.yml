@@ -55,7 +55,7 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
           # Install dev tooling (coverage + quality gates)
-          pip install pytest pytest-cov coverage ruff mypy
+          pip install pytest pytest-cov coverage ruff mypy psycopg2-binary
 
       - name: Lint (ruff)
         run: |
