@@ -21,3 +21,5 @@ Thumbs.db
 *_old.py
 *_tmp.py
 *.bak
+infra/migrations/versions/1fcf21f1297b_replace_users_with_accounts_and_add_auth.py
+Install.md
