@@ -81,6 +81,10 @@ jobs:
             -Dsonar.projectKey=walter-telsnig_smart-energy-dashboard
             -Dsonar.python.coverage.reportPaths=coverage.xml
             -Dsonar.exclusions=**/.venv/**,**/alembic/**,**/migrations/**,**/__pycache__/**
+            -Dsonar.sources=app,modules
+            -Dsonar.tests=tests
+            -Dsonar.test.inclusions=tests/**/*.py
+
 
       # Optional: upload coverage.xml as an artifact for debugging
       - name: Upload coverage.xml (artifact)
