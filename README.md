@@ -2,6 +2,8 @@
 
 [![Smart Energy Dashboard CI](https://github.com/walter-telsnig/smart-energy-dashboard/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/walter-telsnig/smart-energy-dashboard/actions/workflows/ci.yml?query=branch%3Amain)
 [![Hello Python](https://github.com/walter-telsnig/smart-energy-dashboard/actions/workflows/hello-python.yml/badge.svg)](https://github.com/walter-telsnig/smart-energy-dashboard/actions/workflows/hello-python.yml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=walter-telsnig_smart-energy-dashboard&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=walter-telsnig_smart-energy-dashboard)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=walter-telsnig_smart-energy-dashboard&metric=bugs)](https://sonarcloud.io/summary/new_code?id=walter-telsnig_smart-energy-dashboard)
 
 ## 📖 Overview
 
