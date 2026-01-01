@@ -20,12 +20,13 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: ppswy2026
-          POSTGRES_DB: smart_energy_dashboard
+          #POSTGRES_DB: smart_energy_dashboard
+          POSTGRES_DB: pv-db
         ports:
           - 5432:5432
         # Wait until Postgres is ready
         options: >-
-          --health-cmd="pg_isready -U postgres -d smart_energy_dashboard"
+          --health-cmd="pg_isready -U postgres -d pv-db"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -33,7 +34,8 @@ jobs:
     env:
       # Matches the "localhost:5432" expectation in your integration tests,
       # even though we ignore them for coverage (Option A).
-      DATABASE_URL: postgresql://postgres:ppswy2026@localhost:5432/smart_energy_dashboard
+      #DATABASE_URL: postgresql://postgres:ppswy2026@localhost:5432/smart_energy_dashboard
+      DATABASE_URL: postgresql://postgres:ppswy2026@localhost:5432/pv-db
 
     steps:
       - name: Checkout
