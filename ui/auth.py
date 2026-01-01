@@ -99,7 +99,9 @@ def _hide_sidebar() -> None:
 
 
 def _meta_refresh(seconds: int = 60) -> None:
-    st.markdown(f'<meta http-equiv="refresh" content="{int(seconds)}">', unsafe_allow_html=True)
+    st.markdown(
+        f'<meta http-equiv="refresh" content="{int(seconds)}">', unsafe_allow_html=True
+    )
 
 
 def _fetch_rss_titles(url: str, limit: int = 6) -> list[str]:
@@ -205,7 +207,9 @@ def render_login_page() -> None:
             with tab_login:
                 with st.form("login_form", clear_on_submit=False):
                     email = st.text_input("Email *", placeholder="user@example.com")
-                    password = st.text_input("Password *", type="password", placeholder="password")
+                    password = st.text_input(
+                        "Password *", type="password", placeholder="password"
+                    )
                     submitted = st.form_submit_button("LOGIN")
 
                 if submitted:
@@ -222,7 +226,9 @@ def render_login_page() -> None:
                 with st.form("register_form", clear_on_submit=False):
                     full_name = st.text_input("Full name *", placeholder="Your name")
                     remail = st.text_input("Email *", placeholder="user@example.com")
-                    rpassword = st.text_input("Password *", type="password", placeholder="Create a password")
+                    rpassword = st.text_input(
+                        "Password *", type="password", placeholder="Create a password"
+                    )
                     created = st.form_submit_button("CREATE ACCOUNT")
 
                 if created:

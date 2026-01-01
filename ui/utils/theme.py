@@ -2,6 +2,7 @@
 shared UI theme and navigation for the Smart Energy Dashboard
 + Consistent look across all pages
 """
+
 from __future__ import annotations
 import streamlit as st
 
@@ -90,20 +91,31 @@ def apply_global_style() -> None:
         """,
         unsafe_allow_html=True,
     )
+
+
 def sidebar_nav(active: str = "Dashboard") -> None:
     from utils.settings import load_settings  # local import = minimal side effects
 
     # Initialize default view_mode once per session (do not override user changes)
     if "view_mode" not in st.session_state:
-        st.session_state["view_mode"] = load_settings().get("default_view_mode", "Hourly View")
+        st.session_state["view_mode"] = load_settings().get(
+            "default_view_mode", "Hourly View"
+        )
 
     with st.sidebar:
-        st.markdown('<div class="sb-title">Smart Energy Dashboard</div>', unsafe_allow_html=True)
-        st.markdown('<div class="sb-subtitle">Track, analyze, optimize your energy.</div>', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="sb-title">Smart Energy Dashboard</div>', unsafe_allow_html=True
+        )
+        st.markdown(
+            '<div class="sb-subtitle">Track, analyze, optimize your energy.</div>',
+            unsafe_allow_html=True,
+        )
 
         def nav_btn(label: str, target: str | None, key: str):
             if label == active:
-                clicked = st.button(label, use_container_width=True, key=key, type="primary")
+                clicked = st.button(
+                    label, use_container_width=True, key=key, type="primary"
+                )
             else:
                 clicked = st.button(label, use_container_width=True, key=key)
 

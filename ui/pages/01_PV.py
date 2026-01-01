@@ -16,12 +16,16 @@ from typing import List
 from utils.theme import apply_global_style, sidebar_nav
 from utils.auth import auth_headers
 
-st.set_page_config(layout="wide", page_title="PV • Smart Energy Dashboard", page_icon="☀️")
+st.set_page_config(
+    layout="wide", page_title="PV • Smart Energy Dashboard", page_icon="☀️"
+)
 
 apply_global_style()
 sidebar_nav(active="PV")
 
-if "token" not in st.session_state or not st.session_state["token"]:   #auth gate, redirected to login
+if (
+    "token" not in st.session_state or not st.session_state["token"]
+):  # auth gate, redirected to login
     st.switch_page("pages/00_Login.py")
 
 st.title("☀️ PV Production")
@@ -48,6 +52,7 @@ st.session_state["api_base"] = st.text_input(
 )
 api_base = st.session_state["api_base"]
 
+
 @st.cache_data(show_spinner=False)
 def load_csv(path: str) -> pd.DataFrame:
     df = pd.read_csv(path)
@@ -56,7 +61,9 @@ def load_csv(path: str) -> pd.DataFrame:
         if "timestamp" in df.columns:
             df = df.rename(columns={"timestamp": "datetime"})
         else:
-            raise KeyError(f"CSV '{path}' must have a 'datetime' column. Columns: {list(df.columns)}")
+            raise KeyError(
+                f"CSV '{path}' must have a 'datetime' column. Columns: {list(df.columns)}"
+            )
     df["datetime"] = pd.to_datetime(df["datetime"], utc=True)
 
     # Normalize value column (prefer energy kWh; convert kW->kWh for hourly)
@@ -64,11 +71,15 @@ def load_csv(path: str) -> pd.DataFrame:
     if "production_kwh" in df.columns:
         value_col = "production_kwh"
     elif "production_kw" in df.columns:
-        df["production_kwh"] = pd.to_numeric(df["production_kw"], errors="coerce").astype("float64") * 1.0
+        df["production_kwh"] = (
+            pd.to_numeric(df["production_kw"], errors="coerce").astype("float64") * 1.0
+        )
         value_col = "production_kwh"
     else:
         if len(df.columns) <= 1:
-            raise KeyError(f"Could not detect PV value column in '{path}'. Columns: {list(df.columns)}")
+            raise KeyError(
+                f"Could not detect PV value column in '{path}'. Columns: {list(df.columns)}"
+            )
         # fall back to the second column but enforce str typing
         fallback = str(df.columns[1])
         value_col = fallback
@@ -80,6 +91,7 @@ def load_csv(path: str) -> pd.DataFrame:
         .sort_index()
     )
 
+
 @st.cache_data(show_spinner=True)
 def pv_catalog_api(base: str) -> List[str]:
     """
@@ -89,9 +101,9 @@ def pv_catalog_api(base: str) -> List[str]:
     """
     url = f"{base}/api/v1/pv/catalog"
     r = requests.get(
-    url,
-    timeout=10,
-    headers=auth_headers(),
+        url,
+        timeout=10,
+        headers=auth_headers(),
     )
 
     r.raise_for_status()
@@ -106,6 +118,7 @@ def pv_catalog_api(base: str) -> List[str]:
         return [str(x) for x in data]
     return []
 
+
 @st.cache_data(show_spinner=True)
 def pv_range_api(base: str, key: str, start: str, end: str) -> pd.DataFrame:
     """
@@ -113,14 +126,14 @@ def pv_range_api(base: str, key: str, start: str, end: str) -> pd.DataFrame:
     """
     if not key:
         return pd.DataFrame()
-    
+
     url = f"{base}/api/v1/pv/range"
     params = [("key", key), ("start", start), ("end", end)]
     r = requests.get(
-    url,
-    params=params,
-    timeout=15,
-    headers=auth_headers(),
+        url,
+        params=params,
+        timeout=15,
+        headers=auth_headers(),
     )
 
     r.raise_for_status()
@@ -147,17 +160,25 @@ def pv_range_api(base: str, key: str, start: str, end: str) -> pd.DataFrame:
         val_col = "production_kwh"
     else:
         # Check for numeric fallback
-        num = [c for c in df.columns if c != ts_col and pd.api.types.is_numeric_dtype(df[c])]
+        num = [
+            c
+            for c in df.columns
+            if c != ts_col and pd.api.types.is_numeric_dtype(df[c])
+        ]
         val_col = num[0] if num else df.columns[-1]
 
     df[ts_col] = pd.to_datetime(df[ts_col], utc=True)
     df = df.rename(columns={ts_col: "datetime", val_col: "production_kwh"})
     return df.set_index("datetime")[["production_kwh"]].sort_index()
 
+
 # --- Main Logic ---
 
 pv_df_full = None  # Setup for CSV mode
-api_defaults = (pd.date_range("2025-01-01", periods=1).date[0], pd.date_range("2025-01-07", periods=1).date[0])
+api_defaults = (
+    pd.date_range("2025-01-01", periods=1).date[0],
+    pd.date_range("2025-01-07", periods=1).date[0],
+)
 
 if use_api:
     try:
@@ -169,9 +190,15 @@ if use_api:
         if "pv_key" not in st.session_state:
             st.session_state.pv_key = series[0]
 
-        idx = series.index(st.session_state.pv_key) if st.session_state.pv_key in series else 0
-        st.session_state.pv_key = st.selectbox("Select PV series (API)", options=series, index=idx)
-        
+        idx = (
+            series.index(st.session_state.pv_key)
+            if st.session_state.pv_key in series
+            else 0
+        )
+        st.session_state.pv_key = st.selectbox(
+            "Select PV series (API)", options=series, index=idx
+        )
+
         # API Defaults
         d_start, d_end = api_defaults
     except Exception as e:
@@ -186,7 +213,10 @@ else:
     pv_df_full = load_csv(pv_path)
     if not pv_df_full.empty:
         d_start = pv_df_full.index.min().date()
-        d_end = min(pv_df_full.index.min().date() + pd.Timedelta(days=7), pv_df_full.index.max().date())
+        d_end = min(
+            pv_df_full.index.min().date() + pd.Timedelta(days=7),
+            pv_df_full.index.max().date(),
+        )
     else:
         d_start, d_end = api_defaults
 
@@ -203,7 +233,9 @@ end_ts_iso = (pd.Timestamp(str(end)) + pd.Timedelta(days=1)).isoformat()
 
 if use_api:
     try:
-        pv_sel = pv_range_api(api_base, st.session_state.pv_key, start_ts_iso, end_ts_iso)
+        pv_sel = pv_range_api(
+            api_base, st.session_state.pv_key, start_ts_iso, end_ts_iso
+        )
     except Exception as e:
         st.error(f"API Fetch Failed: {e}")
         st.stop()

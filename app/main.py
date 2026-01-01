@@ -1,5 +1,5 @@
 # app/main.py
-#Modified to make legacy DB routers optional (env-flag gated) 
+# Modified to make legacy DB routers optional (env-flag gated)
 # so the API and Streamlit UI can run without Postgres during UI development and CI.
 
 import os
@@ -43,23 +43,30 @@ def create_app() -> FastAPI:
     enable_db_routers = os.getenv("ENABLE_DB_ROUTERS", "0") == "1"
     if enable_db_routers:
         try:
-            from app.api.dataManagement.consumption import router as consumption_router_db
-            from app.api.dataManagement.consumption_minute import router as consumption_minute_router_db
+            from app.api.dataManagement.consumption import (
+                router as consumption_router_db,
+            )
+            from app.api.dataManagement.consumption_minute import (
+                router as consumption_minute_router_db,
+            )
             from app.api.dataManagement.market import router as market_router_db
-            from app.api.dataManagement.market_minute import router as market_minute_router_db
+            from app.api.dataManagement.market_minute import (
+                router as market_minute_router_db,
+            )
             from app.api.dataManagement.pv import router as pv_router_db
             from app.api.dataManagement.pv_minute import router as pv_minute_router_db
             from app.api.dataManagement.weather import router as weather_router_db
 
             app.include_router(consumption_router_db, prefix="/api/dataManagment")
-            app.include_router(consumption_minute_router_db, prefix="/api/dataManagment")
+            app.include_router(
+                consumption_minute_router_db, prefix="/api/dataManagment"
+            )
             app.include_router(market_router_db, prefix="/api/dataManagment")
             app.include_router(market_minute_router_db, prefix="/api/dataManagment")
             app.include_router(pv_router_db, prefix="/api/dataManagment")
             app.include_router(pv_minute_router_db, prefix="/api/dataManagment")
             app.include_router(weather_router_db, prefix="/api/dataManagment")
         except Exception as e:
-
             print(f"[WARN] ENABLE_DB_ROUTERS=1 but DB routers failed to load: {e}")
 
     return app

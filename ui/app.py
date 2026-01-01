@@ -65,7 +65,11 @@ def fetch_merged(hours: int = 24) -> pd.DataFrame:
         df[ts_col] = pd.to_datetime(df[ts_col], utc=True)
         df = df.rename(columns={ts_col: "datetime"}).set_index("datetime").sort_index()
 
-    keep = [c for c in ["pv_kwh", "load_kwh", "price_eur_kwh", "price_eur_mwh"] if c in df.columns]
+    keep = [
+        c
+        for c in ["pv_kwh", "load_kwh", "price_eur_kwh", "price_eur_mwh"]
+        if c in df.columns
+    ]
     return df[keep] if keep else df
 
 
@@ -150,7 +154,7 @@ st.markdown(
 
 
 # ---------------------------
-# Sidebar Navigation 
+# Sidebar Navigation
 # ---------------------------
 with st.sidebar:
     view_mode = st.session_state.get("view_mode", "Hourly View")
@@ -167,7 +171,9 @@ except Exception as e:
     df = pd.DataFrame()
 
 if df.empty:
-    st.info("No merged data available yet. Start the API and ensure /api/v1/timeseries/merged returns rows.")
+    st.info(
+        "No merged data available yet. Start the API and ensure /api/v1/timeseries/merged returns rows."
+    )
     st.stop()
 
 # Daily vs Hourly
@@ -263,7 +269,9 @@ c1, c2 = st.columns([1.2, 1], gap="large")
 
 with c1:
     st.markdown('<div class="section-card">', unsafe_allow_html=True)
-    st.subheader(f"PV vs Consumption ({'daily' if view_mode=='Daily View' else 'hourly'} trend)")
+    st.subheader(
+        f"PV vs Consumption ({'daily' if view_mode=='Daily View' else 'hourly'} trend)"
+    )
     cols = [c for c in ["pv_kwh", "load_kwh"] if c in df_viz.columns]
     if cols:
         st.line_chart(df_viz[cols])
@@ -271,11 +279,17 @@ with c1:
 
 with c2:
     st.markdown('<div class="section-card">', unsafe_allow_html=True)
-    st.subheader(f"Price trend ({'daily' if view_mode=='Daily View' else 'hourly'} trend)")
+    st.subheader(
+        f"Price trend ({'daily' if view_mode=='Daily View' else 'hourly'} trend)"
+    )
     if "price_eur_kwh" in df_viz.columns:
-        st.line_chart(df_viz[["price_eur_kwh"]].rename(columns={"price_eur_kwh": "€/kWh"}))
+        st.line_chart(
+            df_viz[["price_eur_kwh"]].rename(columns={"price_eur_kwh": "€/kWh"})
+        )
     elif "price_eur_mwh" in df_viz.columns:
-        st.line_chart(df_viz[["price_eur_mwh"]].rename(columns={"price_eur_mwh": "€/MWh"}))
+        st.line_chart(
+            df_viz[["price_eur_mwh"]].rename(columns={"price_eur_mwh": "€/MWh"})
+        )
     st.markdown("</div>", unsafe_allow_html=True)
 
 st.markdown("")

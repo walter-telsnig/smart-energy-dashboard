@@ -35,23 +35,28 @@ with col3:
 with col4:
     button_delete = st.button("Delete Data")
 
-def findData(date: datetime):
-    response = requests.get(
-        path,
-        params={
-            "date_value": date.isoformat()
-        }
-    )
-    return response   
 
-date_value = st.date_input("Date:", value=datetime(2025,1,1))
-if(option == "15 Minute"):
-    time_value = st.time_input("Time:", value=time(0,0), step=timedelta(minutes=15))
-elif(option == "Hourly"):
-    time_value = st.time_input("Time:", value=time(0,0), step=timedelta(hours=1))
+def findData(date: datetime):
+    response = requests.get(path, params={"date_value": date.isoformat()})
+    return response
+
+
+date_value = st.date_input("Date:", value=datetime(2025, 1, 1))
+if option == "15 Minute":
+    time_value = st.time_input("Time:", value=time(0, 0), step=timedelta(minutes=15))
+elif option == "Hourly":
+    time_value = st.time_input("Time:", value=time(0, 0), step=timedelta(hours=1))
 
 if isinstance(date_value, date):
-    timestamp = datetime(date_value.year, date_value.month, date_value.day, time_value.hour, time_value.minute, time_value.second, tzinfo=pytz.UTC)
+    timestamp = datetime(
+        date_value.year,
+        date_value.month,
+        date_value.day,
+        time_value.hour,
+        time_value.minute,
+        time_value.second,
+        tzinfo=pytz.UTC,
+    )
 else:
     raise ValueError("No Date selected")
 
@@ -63,7 +68,9 @@ if button_find:
             df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
             st.session_state.price_eur_mwh_value = df["price_eur_mwh"][0]
 
-price_eur_mwh = st.number_input("€-Price per Megawatt-hour:", key="price_eur_mwh_value", format="%0.5f")
+price_eur_mwh = st.number_input(
+    "€-Price per Megawatt-hour:", key="price_eur_mwh_value", format="%0.5f"
+)
 if button_add:
     result = findData(timestamp)
     if result.status_code == 200:
@@ -72,13 +79,15 @@ if button_add:
                 path,
                 params={
                     "datetime": timestamp.isoformat(),
-                    "price_eur_mwh": str(price_eur_mwh)
-                }
+                    "price_eur_mwh": str(price_eur_mwh),
+                },
             )
             if response.status_code == 200:
                 st.toast("Done", icon=":material/thumb_up:")
             else:
-                st.toast("Error: " + str(response.status_code), icon=":material/exclamation:")
+                st.toast(
+                    "Error: " + str(response.status_code), icon=":material/exclamation:"
+                )
         else:
             st.toast("Exists already", icon=":material/exclamation:")
     else:
@@ -95,21 +104,25 @@ elif button_find:
 elif button_edit:
     result = findData(timestamp)
     if result.status_code == 200:
-        if len(result.json())>0:
+        if len(result.json()) > 0:
             response = requests.put(
                 path,
                 params={
                     "datetime": timestamp.isoformat(),
-                    "price_eur_mwh": str(price_eur_mwh)
-                }
+                    "price_eur_mwh": str(price_eur_mwh),
+                },
             )
 
             if response.status_code == 200:
                 st.toast("Done", icon=":material/thumb_up:")
             else:
-                st.toast("Error: " + str(response.status_code), icon=":material/exclamation:")
+                st.toast(
+                    "Error: " + str(response.status_code), icon=":material/exclamation:"
+                )
         else:
-            st.toast("There is no such data. Please add it", icon=":material/exclamation:")
+            st.toast(
+                "There is no such data. Please add it", icon=":material/exclamation:"
+            )
     else:
         st.toast("Error: " + str(result.status_code), icon=":material/exclamation:")
 elif button_delete:
@@ -117,17 +130,16 @@ elif button_delete:
     if result.status_code == 200:
         if len(result.json()) > 0:
             response = requests.delete(
-                path,
-                params={
-                    "date_value": timestamp.isoformat()
-                }
+                path, params={"date_value": timestamp.isoformat()}
             )
 
             if response.status_code == 200:
                 st.toast("Done", icon=":material/thumb_up:")
             else:
-                st.toast("Error: " + str(result.status_code), icon=":material/exclamation:")
+                st.toast(
+                    "Error: " + str(result.status_code), icon=":material/exclamation:"
+                )
         else:
             st.toast("There is no such data.", icon=":material/exclamation:")
     else:
-        st.toast("Error: " + str(result.status_code), icon=":material/exclamation:") 
+        st.toast("Error: " + str(result.status_code), icon=":material/exclamation:")

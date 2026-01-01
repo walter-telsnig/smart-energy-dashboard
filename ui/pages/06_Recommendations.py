@@ -8,13 +8,16 @@ from utils.theme import apply_global_style, sidebar_nav
 from utils.auth import auth_headers
 
 
-st.set_page_config(layout="wide", page_title="Recommendations • Smart Energy Dashboard", page_icon="✅")
+st.set_page_config(
+    layout="wide", page_title="Recommendations • Smart Energy Dashboard", page_icon="✅"
+)
 
 apply_global_style()
 sidebar_nav(active="Recommendations")
 
 if "token" not in st.session_state or not st.session_state["token"]:
     st.switch_page("pages/00_Login.py")
+
 
 def _auth_headers() -> dict:
     tok = st.session_state.get("token")
@@ -31,7 +34,9 @@ if "token" not in st.session_state or st.session_state["token"] is None:
 with st.sidebar:
     st.header("Planning")
 
-    hours = st.slider("Planning horizon (hours)", min_value=6, max_value=168, value=24, step=6)
+    hours = st.slider(
+        "Planning horizon (hours)", min_value=6, max_value=168, value=24, step=6
+    )
     battery_enabled = st.toggle("Use battery recommendations", value=True)
     refresh = st.button("Generate recommendations")
 
@@ -50,7 +55,9 @@ def load_recommendations(hours: int, battery_enabled: bool) -> pd.DataFrame:
         "hours": str(int(hours)),
         "battery_enabled": _bool_param(battery_enabled),
     }
-    resp = requests.get(f"{API_BASE}/recommendations", params=params, timeout=10, headers=auth_headers())
+    resp = requests.get(
+        f"{API_BASE}/recommendations", params=params, timeout=10, headers=auth_headers()
+    )
     resp.raise_for_status()
 
     data = resp.json()
@@ -68,7 +75,12 @@ def load_cost_summary(hours: int, battery_enabled: bool) -> dict:
         "hours": str(int(hours)),
         "battery_enabled": _bool_param(battery_enabled),
     }
-    resp = requests.get(f"{API_BASE}/recommendations/cost-summary", params=params, timeout=10, headers=auth_headers())
+    resp = requests.get(
+        f"{API_BASE}/recommendations/cost-summary",
+        params=params,
+        timeout=10,
+        headers=auth_headers(),
+    )
     resp.raise_for_status()
     return resp.json()
 
@@ -79,7 +91,12 @@ def load_timeseries_window(hours: int) -> pd.DataFrame:
         "window": "true",
         "hours": str(int(hours)),
     }
-    resp = requests.get(f"{API_BASE}/timeseries/merged", params=params, timeout=10, headers=auth_headers())
+    resp = requests.get(
+        f"{API_BASE}/timeseries/merged",
+        params=params,
+        timeout=10,
+        headers=auth_headers(),
+    )
     resp.raise_for_status()
 
     df = pd.DataFrame(resp.json())
@@ -105,10 +122,16 @@ left, right = st.columns([3, 1])
 
 with left:
     st.title("⚡ Energy Usage Recommendations")
-    st.caption("Simple, human-friendly suggestions based on PV, consumption, prices, and weather")
+    st.caption(
+        "Simple, human-friendly suggestions based on PV, consumption, prices, and weather"
+    )
 
 with right:
-    if not ts_df.empty and "temp_c" in ts_df.columns and "cloud_cover_pct" in ts_df.columns:
+    if (
+        not ts_df.empty
+        and "temp_c" in ts_df.columns
+        and "cloud_cover_pct" in ts_df.columns
+    ):
         now = (pd.Timestamp.utcnow() + pd.Timedelta(hours=1)).floor("h")
         current_slice = ts_df[ts_df["datetime"] <= now]
         current_row = ts_df.iloc[0] if current_slice.empty else current_slice.iloc[-1]
@@ -156,11 +179,15 @@ ACTION_LABELS = {
     "idle": "⚪ No action needed",
 }
 
-current_action_label = ACTION_LABELS.get(str(current_rec.get("action", "")), str(current_rec.get("action", "")))
+current_action_label = ACTION_LABELS.get(
+    str(current_rec.get("action", "")), str(current_rec.get("action", ""))
+)
 current_reason = str(current_rec.get("reason", "")).strip()
 current_time_str = pd.to_datetime(current_rec["timestamp"], utc=True).strftime("%H:%M")
 
-st.info(f"**Right now ({current_time_str}) → {current_action_label}**  \n{current_reason}")
+st.info(
+    f"**Right now ({current_time_str}) → {current_action_label}**  \n{current_reason}"
+)
 
 
 # ---------------- KPIs ----------------
@@ -184,7 +211,9 @@ kpi4.metric("Savings (%)", f"{savings_pct:.2f} %")
 st.subheader("📋 Recommendation Plan")
 
 reco_df["action_label"] = reco_df["action"].map(ACTION_LABELS).fillna(reco_df["action"])
-st.dataframe(reco_df[["timestamp", "action_label", "reason", "score"]], use_container_width=True)
+st.dataframe(
+    reco_df[["timestamp", "action_label", "reason", "score"]], use_container_width=True
+)
 
 
 # ---------------- PV / Load / Price with overlay ----------------
@@ -196,7 +225,11 @@ if ts_df.empty:
 
 plot_df = ts_df.copy()
 
-actions = reco_df[["timestamp", "action", "score"]].rename(columns={"timestamp": "datetime"}).copy()
+actions = (
+    reco_df[["timestamp", "action", "score"]]
+    .rename(columns={"timestamp": "datetime"})
+    .copy()
+)
 actions["datetime"] = pd.to_datetime(actions["datetime"], utc=True)
 
 plot_df = plot_df.merge(actions, on="datetime", how="left")
@@ -219,17 +252,30 @@ action_points = (
     .encode(
         y=alt.Y("pv_kwh:Q"),
         shape=alt.Shape("action:N"),
-        tooltip=["datetime:T", "action:N", "score:Q", "pv_kwh:Q", "load_kwh:Q", "price_eur_kwh:Q"],
+        tooltip=[
+            "datetime:T",
+            "action:N",
+            "score:Q",
+            "pv_kwh:Q",
+            "load_kwh:Q",
+            "price_eur_kwh:Q",
+        ],
     )
 )
 
-price_line = alt.Chart(plot_df).mark_line().encode(
-    x=alt.X("datetime:T", title="Time"),
-    y=alt.Y("price_eur_kwh:Q", title="Price (€/kWh)"),
-    tooltip=["datetime:T", "price_eur_kwh:Q"],
+price_line = (
+    alt.Chart(plot_df)
+    .mark_line()
+    .encode(
+        x=alt.X("datetime:T", title="Time"),
+        y=alt.Y("price_eur_kwh:Q", title="Price (€/kWh)"),
+        tooltip=["datetime:T", "price_eur_kwh:Q"],
+    )
 )
 
-st.altair_chart((pv_line + load_line + action_points).interactive(), use_container_width=True)
+st.altair_chart(
+    (pv_line + load_line + action_points).interactive(), use_container_width=True
+)
 st.altair_chart(price_line.interactive(), use_container_width=True)
 
 with st.expander("ℹ️ What does this mean?"):

@@ -7,6 +7,7 @@ import streamlit as st
 
 API_DEFAULT = "http://localhost:8000"
 
+
 # ---------------------------
 # Helpers
 # ---------------------------
@@ -40,7 +41,6 @@ def _hide_sidebar_for_landing() -> None:
     )
 
 
-
 def _api_base() -> str:
     return str(st.session_state.get("api_base", API_DEFAULT)).rstrip("/")
 
@@ -49,7 +49,9 @@ def api_login(email: str, password: str) -> tuple[bool, str, str]:
     base = _api_base()
     url = f"{base}/api/v1/token"
     try:
-        r = requests.post(url, data={"username": email, "password": password}, timeout=10)
+        r = requests.post(
+            url, data={"username": email, "password": password}, timeout=10
+        )
         if r.status_code != 200:
             return False, f"Login failed ({r.status_code}): {r.text}", ""
         token = r.json().get("access_token")
@@ -81,7 +83,9 @@ def api_register(email: str, password: str, full_name: str) -> tuple[bool, str]:
 # ---------------------------
 # Page
 # ---------------------------
-st.set_page_config(page_title="Login • Smart Energy Dashboard", layout="wide", page_icon="⚡")
+st.set_page_config(
+    page_title="Login • Smart Energy Dashboard", layout="wide", page_icon="⚡"
+)
 _hide_sidebar_for_landing()
 
 # session keys
@@ -207,8 +211,6 @@ left, right = st.columns([1.05, 1.25], gap="large")
 # LEFT: Login/Register
 # ---------------------------
 with left:
-
-
     st.markdown("## Sign In to Smart Energy ⚡")
     st.write("New here? Please register to continue.")
 
@@ -217,7 +219,9 @@ with left:
     with tab_login:
         with st.form("login_form", clear_on_submit=False):
             email = st.text_input("Email address *", placeholder="user@example.com")
-            password = st.text_input("Password *", type="password", placeholder="password")
+            password = st.text_input(
+                "Password *", type="password", placeholder="password"
+            )
             submitted = st.form_submit_button("LOGIN")
 
         if submitted:
@@ -235,14 +239,18 @@ with left:
         with st.form("register_form", clear_on_submit=False):
             full_name = st.text_input("Full name *", placeholder="Your name")
             remail = st.text_input("Email address *", placeholder="user@example.com")
-            rpassword = st.text_input("Password *", type="password", placeholder="Create a password")
+            rpassword = st.text_input(
+                "Password *", type="password", placeholder="Create a password"
+            )
             created = st.form_submit_button("CREATE ACCOUNT")
 
         if created:
             if not full_name.strip() or not remail.strip() or not rpassword.strip():
                 st.error("Please fill Full name, Email, and Password.")
             else:
-                ok, msg = api_register(remail.strip().lower(), rpassword, full_name.strip())
+                ok, msg = api_register(
+                    remail.strip().lower(), rpassword, full_name.strip()
+                )
                 if ok:
                     st.success("Account created. Now login from the Login tab.")
                 else:
