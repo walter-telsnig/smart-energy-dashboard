@@ -191,7 +191,7 @@ def render_login_page() -> None:
         unsafe_allow_html=True,
     )
 
-    spacer_l, main, spacer_r = st.columns([1, 3, 1])
+    _, main, _ = st.columns([1, 3, 1])
     with main:
         st.markdown('<div class="login-wrap">', unsafe_allow_html=True)
 
