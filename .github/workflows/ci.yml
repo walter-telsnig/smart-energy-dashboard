@@ -66,9 +66,11 @@ jobs:
           mypy --config-file mypy.ini
 
       # ✅ Option A: reliable coverage generation (ignores integration tests)
+      # old: pytest --ignore=tests/integration --cov --cov-report=xml -q
       - name: Test (Pytest) + Coverage (unit tests only)
         run: |
-          pytest --ignore=tests/integration --cov --cov-report=xml -q
+          pytest --cov --cov-report=xml -q
+
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
