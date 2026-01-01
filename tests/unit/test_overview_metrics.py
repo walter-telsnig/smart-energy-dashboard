@@ -1,6 +1,7 @@
 from __future__ import annotations
 from pathlib import Path
 from ui.utils.overview_metrics import count_csv_files, count_csv_rows, total_pv_kwh
+import pytest
 
 
 def write_text(p: Path, text: str) -> None:
@@ -36,7 +37,7 @@ def test_total_pv_kwh_from_production_kwh(tmp_path: Path) -> None:
         "2025-01-01 01:00:00+00:00,2.0\n",
     )
 
-    assert total_pv_kwh(tmp_path) == 3.5
+    assert total_pv_kwh(tmp_path) == pytest.approx(3.5)
 
 
 def test_total_pv_kwh_from_production_kw(tmp_path: Path) -> None:
@@ -48,4 +49,4 @@ def test_total_pv_kwh_from_production_kw(tmp_path: Path) -> None:
         "2025-01-01 01:00:00+00:00,2.0\n",
     )
 
-    assert total_pv_kwh(tmp_path) == 3.0
+    assert total_pv_kwh(tmp_path) == pytest.approx(3.0)
