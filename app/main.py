@@ -4,7 +4,7 @@
 
 import os
 from fastapi import FastAPI
-from infra.db import Base, engine
+# from infra.db import Base, engine
 
 from app.api.v1.accounts import router as accounts_router
 from app.api.v1.pv import router as pv_router
@@ -59,7 +59,7 @@ def create_app() -> FastAPI:
             app.include_router(pv_minute_router_db, prefix="/api/dataManagment")
             app.include_router(weather_router_db, prefix="/api/dataManagment")
         except Exception as e:
-            # Don't kill the API if Postgres is not available locally
+
             print(f"[WARN] ENABLE_DB_ROUTERS=1 but DB routers failed to load: {e}")
 
     return app

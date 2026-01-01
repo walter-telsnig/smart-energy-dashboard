@@ -88,7 +88,6 @@ def pv_catalog_api(base: str) -> List[str]:
     Return list of keys.
     """
     url = f"{base}/api/v1/pv/catalog"
-    # r = requests.get(url, timeout=10)
     r = requests.get(
     url,
     timeout=10,
@@ -117,8 +116,6 @@ def pv_range_api(base: str, key: str, start: str, end: str) -> pd.DataFrame:
     
     url = f"{base}/api/v1/pv/range"
     params = [("key", key), ("start", start), ("end", end)]
-    
-    # r = requests.get(url, params=params, timeout=15)
     r = requests.get(
     url,
     params=params,

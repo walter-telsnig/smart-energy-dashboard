@@ -44,7 +44,6 @@ DEFAULTS = [
 @st.cache_data(show_spinner=True)
 def cons_catalog_api(base: str) -> List[str]:
     url = f"{base}/api/v1/consumption/catalog"
-    # r = requests.get(url, timeout=5)
     r = requests.get(
     url,
     timeout=10,
@@ -59,7 +58,6 @@ def cons_range_api(base: str, key: str, start: str, end: str) -> pd.DataFrame:
     if not key:
         return pd.DataFrame()
     url = f"{base}/api/v1/consumption/range"
-    # r = requests.get(url, params={"key": key, "start": start, "end": end}, timeout=10
     r = requests.get(
     url,
     params={"key": key, "start": start, "end": end},

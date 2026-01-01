@@ -207,7 +207,7 @@ left, right = st.columns([1.05, 1.25], gap="large")
 # LEFT: Login/Register
 # ---------------------------
 with left:
-    # st.markdown('<div class="left-panel">', unsafe_allow_html=True)
+
 
     st.markdown("## Sign In to Smart Energy ⚡")
     st.write("New here? Please register to continue.")
@@ -247,13 +247,6 @@ with left:
                     st.success("Account created. Now login from the Login tab.")
                 else:
                     st.error(msg)
-
-    # st.caption("Optional: API base (if backend runs elsewhere).")
-    # st.session_state["api_base"] = st.text_input(
-    #     "API Base",
-    #     value=str(st.session_state["api_base"]),
-    #     help="Example: http://localhost:8000",
-    # ).rstrip("/")
 
     st.markdown("</div>", unsafe_allow_html=True)  # close left-panel
 
