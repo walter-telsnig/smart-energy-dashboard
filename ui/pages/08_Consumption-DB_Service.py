@@ -25,7 +25,7 @@ daten = {
     "battery_charging_kwh_value": 0.0,
     "battery_discharging_kwh_value": 0.0,
     "grid_export_kwh_value": 0.0,
-    "grid_import_kwh_value": 0.0
+    "grid_import_kwh_value": 0.0,
 }
 
 for key, value in daten.items():
@@ -50,68 +50,133 @@ with col3:
 with col4:
     button_delete = st.button("Delete Data")
 
+
 def findData(date: datetime):
-    response = requests.get(
-        path,
-        params={
-            "date_value": date.isoformat()
-        }
-    )
+    response = requests.get(path, params={"date_value": date.isoformat()})
     return response
 
-date_value = st.date_input("Date:", value=datetime(2025,1,1))
-if(option == "15 Minute"):
-    time_value = st.time_input("Time:", value=time(0,0), step=timedelta(minutes=15))
-elif(option == "Hourly"):
-    time_value = st.time_input("Time:", value=time(0,0), step=timedelta(hours=1))
+
+date_value = st.date_input("Date:", value=datetime(2025, 1, 1))
+if option == "15 Minute":
+    time_value = st.time_input("Time:", value=time(0, 0), step=timedelta(minutes=15))
+elif option == "Hourly":
+    time_value = st.time_input("Time:", value=time(0, 0), step=timedelta(hours=1))
 
 if isinstance(date_value, date):
-    timestamp = datetime(date_value.year, date_value.month, date_value.day, time_value.hour, time_value.minute, time_value.second, tzinfo=pytz.UTC)
+    timestamp = datetime(
+        date_value.year,
+        date_value.month,
+        date_value.day,
+        time_value.hour,
+        time_value.minute,
+        time_value.second,
+        tzinfo=pytz.UTC,
+    )
 else:
     raise ValueError("No Date selected")
 if button_find:
     result = findData(timestamp)
     if result.status_code == 200:
         if len(result.json()) > 0:
-            if(option == "15 Minute"):
-                df = pd.DataFrame(result.json(), columns=["datetime", "consumption_kwh", "household_general_kwh", "heat_pump_kwh", "ev_load_kwh", "household_base_kwh", "total_consumption_kwh", "battery_soc_kwh", "battery_charging_kwh", "battery_discharging_kwh", "grid_export_kwh", "grid_import_kwh"])
+            if option == "15 Minute":
+                df = pd.DataFrame(
+                    result.json(),
+                    columns=[
+                        "datetime",
+                        "consumption_kwh",
+                        "household_general_kwh",
+                        "heat_pump_kwh",
+                        "ev_load_kwh",
+                        "household_base_kwh",
+                        "total_consumption_kwh",
+                        "battery_soc_kwh",
+                        "battery_charging_kwh",
+                        "battery_discharging_kwh",
+                        "grid_export_kwh",
+                        "grid_import_kwh",
+                    ],
+                )
                 df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
 
-                st.session_state.household_general_kwh_value = df["household_general_kwh"][0]
+                st.session_state.household_general_kwh_value = df[
+                    "household_general_kwh"
+                ][0]
                 st.session_state.heat_pump_kwh_value = df["heat_pump_kwh"][0]
                 st.session_state.ev_load_kwh_value = df["ev_load_kwh"][0]
                 st.session_state.household_base_kwh_value = df["household_base_kwh"][0]
-                st.session_state.total_consumption_kwh_value = df["total_consumption_kwh"][0]
+                st.session_state.total_consumption_kwh_value = df[
+                    "total_consumption_kwh"
+                ][0]
                 st.session_state.battery_soc_kwh_value = df["battery_soc_kwh"][0]
-                st.session_state.battery_charging_kwh_value = df["battery_charging_kwh"][0]
-                st.session_state.battery_discharging_kwh_value = df["battery_discharging_kwh"][0]
+                st.session_state.battery_charging_kwh_value = df[
+                    "battery_charging_kwh"
+                ][0]
+                st.session_state.battery_discharging_kwh_value = df[
+                    "battery_discharging_kwh"
+                ][0]
                 st.session_state.grid_export_kwh_value = df["grid_export_kwh"][0]
                 st.session_state.grid_import_kwh_value = df["grid_import_kwh"][0]
-            elif(option == "Hourly"):
-                df = pd.DataFrame(result.json(), columns=["datetime", "consumption_kwh"])
+            elif option == "Hourly":
+                df = pd.DataFrame(
+                    result.json(), columns=["datetime", "consumption_kwh"]
+                )
                 df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
 
             st.session_state.consumption_kwh_value = df["consumption_kwh"][0]
 
-if(option == "15 Minute"):
-    household_general_kwh = st.number_input("Household General Kilowatt per Hour:", key="household_general_kwh_value", format="%0.5f")
-    heat_pump_kwh = st.number_input("Heatpump Kilowatt per Hour:", key="heat_pump_kwh_value", format="%0.5f")
-    ev_load_kwh = st.number_input("EV Load Kilowatt per Hour:", key="ev_load_kwh_value", format="%0.5f")
-    household_base_kwh = st.number_input("Household Base Kilowatt per Hour:", key="household_base_kwh_value", format="%0.5f")
-    total_consumption_kwh = st.number_input("Total Consumption Kilowatt per Hour:", key="total_consumption_kwh_value", format="%0.5f")
-    battery_soc_kwh = st.number_input("Battery State of Charge Kilowatt per Hour:", key="battery_soc_kwh_value", format="%0.5f")
-    battery_charging_kwh = st.number_input("Battery Charging Kilowatt per Hour:", key="battery_charging_kwh_value", format="%0.5f")
-    battery_discharging_kwh = st.number_input("Battery Discharging Kilowatt per Hour:", key="battery_discharging_kwh_value", format="%0.5f")
-    grid_export_kwh = st.number_input("Grid Export Kilowatt per Hour:", key="grid_export_kwh_value", format="%0.5f")
-    grid_import_kwh = st.number_input("Grid Import Kilowatt per Hour:", key="grid_import_kwh_value", format="%0.5f")
+if option == "15 Minute":
+    household_general_kwh = st.number_input(
+        "Household General Kilowatt per Hour:",
+        key="household_general_kwh_value",
+        format="%0.5f",
+    )
+    heat_pump_kwh = st.number_input(
+        "Heatpump Kilowatt per Hour:", key="heat_pump_kwh_value", format="%0.5f"
+    )
+    ev_load_kwh = st.number_input(
+        "EV Load Kilowatt per Hour:", key="ev_load_kwh_value", format="%0.5f"
+    )
+    household_base_kwh = st.number_input(
+        "Household Base Kilowatt per Hour:",
+        key="household_base_kwh_value",
+        format="%0.5f",
+    )
+    total_consumption_kwh = st.number_input(
+        "Total Consumption Kilowatt per Hour:",
+        key="total_consumption_kwh_value",
+        format="%0.5f",
+    )
+    battery_soc_kwh = st.number_input(
+        "Battery State of Charge Kilowatt per Hour:",
+        key="battery_soc_kwh_value",
+        format="%0.5f",
+    )
+    battery_charging_kwh = st.number_input(
+        "Battery Charging Kilowatt per Hour:",
+        key="battery_charging_kwh_value",
+        format="%0.5f",
+    )
+    battery_discharging_kwh = st.number_input(
+        "Battery Discharging Kilowatt per Hour:",
+        key="battery_discharging_kwh_value",
+        format="%0.5f",
+    )
+    grid_export_kwh = st.number_input(
+        "Grid Export Kilowatt per Hour:", key="grid_export_kwh_value", format="%0.5f"
+    )
+    grid_import_kwh = st.number_input(
+        "Grid Import Kilowatt per Hour:", key="grid_import_kwh_value", format="%0.5f"
+    )
 
-consumption_kwh = st.number_input("Consumption Kilowatt per Hour:", key="consumption_kwh_value", format="%0.5f")
+consumption_kwh = st.number_input(
+    "Consumption Kilowatt per Hour:", key="consumption_kwh_value", format="%0.5f"
+)
 
 if button_add:
     result = findData(timestamp)
     if result.status_code == 200:
         if len(result.json()) == 0:
-            if(option == "15 Minute"):
+            if option == "15 Minute":
                 response = requests.post(
                     path,
                     params={
@@ -126,22 +191,24 @@ if button_add:
                         "battery_charging_kwh": str(battery_charging_kwh),
                         "battery_discharging_kwh": str(battery_discharging_kwh),
                         "grid_export_kwh": str(grid_export_kwh),
-                        "grid_import_kwh": str(grid_import_kwh)
-                    }
+                        "grid_import_kwh": str(grid_import_kwh),
+                    },
                 )
-            elif(option == "Hourly"):
+            elif option == "Hourly":
                 response = requests.post(
                     path,
                     params={
                         "datetime": timestamp.isoformat(),
-                        "consumption_kwh": str(consumption_kwh)
-                    }
+                        "consumption_kwh": str(consumption_kwh),
+                    },
                 )
 
             if response.status_code == 200:
                 st.toast("Done", icon=":material/thumb_up:")
             else:
-                st.toast("Error: " + str(response.status_code), icon=":material/exclamation:")
+                st.toast(
+                    "Error: " + str(response.status_code), icon=":material/exclamation:"
+                )
         else:
             st.toast("Exists already", icon=":material/exclamation:")
     else:
@@ -174,24 +241,28 @@ elif button_edit:
                         "battery_charging_kwh": str(battery_charging_kwh),
                         "battery_discharging_kwh": str(battery_discharging_kwh),
                         "grid_export_kwh": str(grid_export_kwh),
-                        "grid_import_kwh": str(grid_import_kwh)
-                    }
+                        "grid_import_kwh": str(grid_import_kwh),
+                    },
                 )
             elif option == "Hourly":
                 response = requests.put(
                     path,
                     params={
                         "datetime": timestamp.isoformat(),
-                        "consumption_kwh": str(consumption_kwh)
-                    }
+                        "consumption_kwh": str(consumption_kwh),
+                    },
                 )
 
             if response.status_code == 200:
                 st.toast("Done", icon=":material/thumb_up:")
             else:
-                st.toast("Error: " + str(response.status_code), icon=":material/exclamation:")
+                st.toast(
+                    "Error: " + str(response.status_code), icon=":material/exclamation:"
+                )
         else:
-            st.toast("There is no such data. Please add it", icon=":material/exclamation:")
+            st.toast(
+                "There is no such data. Please add it", icon=":material/exclamation:"
+            )
     else:
         st.toast("Error: " + str(result.status_code), icon=":material/exclamation:")
 elif button_delete:
@@ -199,16 +270,15 @@ elif button_delete:
     if result.status_code == 200:
         if len(result.json()) > 0:
             response = requests.delete(
-                path,
-                params={
-                    "date_value": timestamp.isoformat()
-                }
+                path, params={"date_value": timestamp.isoformat()}
             )
 
             if response.status_code == 200:
                 st.toast("Done", icon=":material/thumb_up:")
             else:
-                st.toast("Error: " + str(result.status_code), icon=":material/exclamation:")
+                st.toast(
+                    "Error: " + str(result.status_code), icon=":material/exclamation:"
+                )
         else:
             st.toast("There is no such data.", icon=":material/exclamation:")
     else:

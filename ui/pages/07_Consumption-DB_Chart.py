@@ -28,26 +28,41 @@ left, right = st.columns(2)
 with left:
     start = cast(date, st.date_input("Start", value=datetime(now.year, 1, 1)))
 with right:
-    end = cast(date, st.date_input("End", value=datetime(now.year, 1,1)+pd.Timedelta(days=7)))
+    end = cast(
+        date,
+        st.date_input("End", value=datetime(now.year, 1, 1) + pd.Timedelta(days=7)),
+    )
 
 start_ts = pd.Timestamp(start, tz="UTC")
 end_ts = pd.Timestamp(end, tz="UTC") + pd.Timedelta(days=1)
 
-preview_amount = st.number_input("preview_amount",value=48)
+preview_amount = st.number_input("preview_amount", value=48)
 
 response = requests.get(
-    path+"/list",
-    params={
-        "start": start_ts.isoformat(),
-        "end": end_ts.isoformat()
-    }
+    path + "/list", params={"start": start_ts.isoformat(), "end": end_ts.isoformat()}
 )
 
 if response.status_code == 200:
-    if(option == "15 Minute"):
-        df = pd.DataFrame(response.json(), columns=["datetime", "consumption_kwh", "household_general_kwh", "heat_pump_kwh", "ev_load_kwh", "household_base_kwh", "total_consumption_kwh", "battery_soc_kwh", "battery_charging_kwh", "battery_discharging_kwh", "grid_export_kwh", "grid_import_kwh"])
+    if option == "15 Minute":
+        df = pd.DataFrame(
+            response.json(),
+            columns=[
+                "datetime",
+                "consumption_kwh",
+                "household_general_kwh",
+                "heat_pump_kwh",
+                "ev_load_kwh",
+                "household_base_kwh",
+                "total_consumption_kwh",
+                "battery_soc_kwh",
+                "battery_charging_kwh",
+                "battery_discharging_kwh",
+                "grid_export_kwh",
+                "grid_import_kwh",
+            ],
+        )
         df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
-    elif(option == "Hourly"):
+    elif option == "Hourly":
         df = pd.DataFrame(response.json(), columns=["datetime", "consumption_kwh"])
         df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
 
@@ -55,16 +70,16 @@ if response.status_code == 200:
     with chart:
         st.line_chart(df.set_index("datetime")["consumption_kwh"])
     with stats:
-        st.dataframe(df.iloc[:,1:].describe())
+        st.dataframe(df.iloc[:, 1:].describe())
     with preview:
         st.write("Number of Results: " + str(len(df.index)))
-        if(preview_amount<=len(df.index)):
+        if preview_amount <= len(df.index):
             st.dataframe(df.head(preview_amount))
         else:
             st.dataframe(df.head(len(df.index)))
-else: 
-        st.write("No Data")
+else:
+    st.write("No Data")
 
-#--Check Status--
-#st.write("Status:", response.status_code)
-#st.write("Raw response:", response.text)
+# --Check Status--
+# st.write("Status:", response.status_code)
+# st.write("Raw response:", response.text)

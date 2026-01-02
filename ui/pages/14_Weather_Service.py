@@ -14,10 +14,7 @@ if "token" not in st.session_state or st.session_state["token"] is None:
     st.stop()
 st.title(":cloud: Weather Service - DB Version")
 
-daten = {
-    "temp_c": 0.0,
-    "cloud_cover_pct": 0.0
-}
+daten = {"temp_c": 0.0, "cloud_cover_pct": 0.0}
 
 for key, value in daten.items():
     if key not in st.session_state:
@@ -35,34 +32,43 @@ with col3:
 with col4:
     button_delete = st.button("Delete Data")
 
-def findData(date: datetime):
-    response = requests.get(
-        path,
-        params={
-            "date_value": date.isoformat()
-        }
-    )
-    return response   
 
-date_value = st.date_input("Date:", value=datetime(2025,1,1))
-time_value = st.time_input("Time:", value=time(0,0), step=timedelta(hours=1))
+def findData(date: datetime):
+    response = requests.get(path, params={"date_value": date.isoformat()})
+    return response
+
+
+date_value = st.date_input("Date:", value=datetime(2025, 1, 1))
+time_value = st.time_input("Time:", value=time(0, 0), step=timedelta(hours=1))
 
 if isinstance(date_value, date):
-    timestamp = datetime(date_value.year, date_value.month, date_value.day, time_value.hour, time_value.minute, time_value.second, tzinfo=pytz.UTC)
+    timestamp = datetime(
+        date_value.year,
+        date_value.month,
+        date_value.day,
+        time_value.hour,
+        time_value.minute,
+        time_value.second,
+        tzinfo=pytz.UTC,
+    )
 else:
     raise ValueError("No Date selected")
-    
+
 if button_find:
     result = findData(timestamp)
     if result.status_code == 200:
         if len(result.json()) > 0:
-            df = pd.DataFrame(result.json(), columns=["datetime", "temp_c", "cloud_cover_pct"])
+            df = pd.DataFrame(
+                result.json(), columns=["datetime", "temp_c", "cloud_cover_pct"]
+            )
             df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
             st.session_state.temp_c_value = df["temp_c"][0]
             st.session_state.cloud_cover_pct_value = df["cloud_cover_pct"][0]
 
 temp_c = st.number_input("Temperature Celsius:", key="temp_c_value", format="%0.2f")
-cloud_cover_pct = st.number_input("Cloud Cover in %:", key="cloud_cover_pct_value", format="%0.2f")
+cloud_cover_pct = st.number_input(
+    "Cloud Cover in %:", key="cloud_cover_pct_value", format="%0.2f"
+)
 
 if button_add:
     if cloud_cover_pct > 100:
@@ -76,13 +82,16 @@ if button_add:
                     params={
                         "datetime": timestamp.isoformat(),
                         "temp_c": str(temp_c),
-                        "cloud_cover_pct": str(cloud_cover_pct)
-                    }
+                        "cloud_cover_pct": str(cloud_cover_pct),
+                    },
                 )
                 if response.status_code == 200:
                     st.toast("Done", icon=":material/thumb_up:")
                 else:
-                    st.toast("Error: " + str(response.status_code), icon=":material/exclamation:")
+                    st.toast(
+                        "Error: " + str(response.status_code),
+                        icon=":material/exclamation:",
+                    )
             else:
                 st.toast("Exists already", icon=":material/exclamation:")
         else:
@@ -98,26 +107,34 @@ elif button_find:
         st.toast("Error: " + str(result.status_code), icon=":material/exclamation:")
 elif button_edit:
     if cloud_cover_pct > 100:
-        st.toast("Please take a number equal or less than 100", icon=":material/exclamation:")
+        st.toast(
+            "Please take a number equal or less than 100", icon=":material/exclamation:"
+        )
     else:
         result = findData(timestamp)
         if result.status_code == 200:
-            if len(result.json())>0:
+            if len(result.json()) > 0:
                 response = requests.put(
                     path,
                     params={
                         "datetime": timestamp.isoformat(),
                         "temp_c": str(temp_c),
-                        "cloud_cover_pct": str(cloud_cover_pct)
-                    }
+                        "cloud_cover_pct": str(cloud_cover_pct),
+                    },
                 )
 
                 if response.status_code == 200:
                     st.toast("Done", icon=":material/thumb_up:")
                 else:
-                    st.toast("Error: " + str(response.status_code), icon=":material/exclamation:")
+                    st.toast(
+                        "Error: " + str(response.status_code),
+                        icon=":material/exclamation:",
+                    )
             else:
-                st.toast("There is no such data. Please add it", icon=":material/exclamation:")
+                st.toast(
+                    "There is no such data. Please add it",
+                    icon=":material/exclamation:",
+                )
         else:
             st.toast("Error: " + str(result.status_code), icon=":material/exclamation:")
 elif button_delete:
@@ -125,16 +142,15 @@ elif button_delete:
     if result.status_code == 200:
         if len(result.json()) > 0:
             response = requests.delete(
-                path,
-                params={
-                    "date_value": timestamp.isoformat()
-                }
+                path, params={"date_value": timestamp.isoformat()}
             )
 
             if response.status_code == 200:
                 st.toast("Done", icon=":material/thumb_up:")
             else:
-                st.toast("Error: " + str(result.status_code), icon=":material/exclamation:")
+                st.toast(
+                    "Error: " + str(result.status_code), icon=":material/exclamation:"
+                )
         else:
             st.toast("There is no such data.", icon=":material/exclamation:")
     else:

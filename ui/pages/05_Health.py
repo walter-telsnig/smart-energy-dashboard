@@ -14,8 +14,24 @@ import platform
 import pandas as pd
 import requests
 from typing import List, Tuple
+from utils.theme import apply_global_style, sidebar_nav
 
-st.set_page_config(layout="wide")
+
+st.set_page_config(
+    layout="wide", page_title="Health • Smart Energy Dashboard", page_icon="🩺"
+)
+
+apply_global_style()
+sidebar_nav(active="Health")
+
+if "token" not in st.session_state or not st.session_state["token"]:
+    st.switch_page("pages/00_Login.py")
+
+
+def _auth_headers() -> dict:
+    tok = st.session_state.get("token")
+    return {"Authorization": f"Bearer {tok}"} if tok else {}
+
 
 if "token" not in st.session_state or st.session_state["token"] is None:
     st.warning("Please log in to access this page.")
@@ -37,7 +53,10 @@ st.table(pd.DataFrame(rows, columns=["Name", "Path", "Exists"]))
 st.subheader("CSV Readability (optional)")
 pv_csv: str = st.text_input("PV CSV", "infra/data/pv/pv_2025_hourly.csv")
 price_csv: str = st.text_input("Price CSV", "infra/data/market/price_2025_hourly.csv")
-cons_csv: str = st.text_input("Consumption CSV", "infra/data/consumption/consumption_2025_hourly.csv")
+cons_csv: str = st.text_input(
+    "Consumption CSV", "infra/data/consumption/consumption_2025_hourly.csv"
+)
+
 
 def try_read(path: str, n: int = 3) -> Tuple[str, str, str]:
     """Return (ok, path, info) where ok is '✅' or '❌'."""
@@ -46,6 +65,7 @@ def try_read(path: str, n: int = 3) -> Tuple[str, str, str]:
         return ("✅", path, f"Columns: {list(df.columns)}")
     except Exception as e:
         return ("❌", path, str(e))
+
 
 if st.button("Test CSVs"):
     for label, pth in [("PV", pv_csv), ("Price", price_csv), ("Consumption", cons_csv)]:
@@ -57,6 +77,7 @@ if st.button("Test CSVs"):
 st.subheader("API Endpoints")
 api_base: str = st.text_input("API base", "http://localhost:8000")
 
+
 def ping_defaults() -> Tuple[str, str, str]:
     url = f"{api_base}/api/v1/battery/defaults"
     try:
@@ -66,6 +87,7 @@ def ping_defaults() -> Tuple[str, str, str]:
         return ("❌", url, f"{r.status_code} {r.text[:120]}")
     except Exception as e:
         return ("❌", url, str(e))
+
 
 col1, col2 = st.columns(2)
 with col1:

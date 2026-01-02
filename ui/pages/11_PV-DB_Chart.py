@@ -28,24 +28,23 @@ left, right = st.columns(2)
 with left:
     start = cast(date, st.date_input("Start", value=datetime(now.year, 1, 1)))
 with right:
-    end = cast(date, st.date_input("End", value=datetime(now.year, 1,1)+pd.Timedelta(days=7)))
+    end = cast(
+        date,
+        st.date_input("End", value=datetime(now.year, 1, 1) + pd.Timedelta(days=7)),
+    )
 
 start_ts = pd.Timestamp(start, tz="UTC")
 end_ts = pd.Timestamp(end, tz="UTC") + pd.Timedelta(days=1)
 
-preview_amount = st.number_input("preview_amount",value=48)
+preview_amount = st.number_input("preview_amount", value=48)
 
 response = requests.get(
-    path+"/list",
-    params={
-        "start": start_ts.isoformat(),
-        "end": end_ts.isoformat()
-    }
+    path + "/list", params={"start": start_ts.isoformat(), "end": end_ts.isoformat()}
 )
 
-#--Check Status--
-#st.write("Status:", response.status_code)
-#st.write("Raw response:", response.text)
+# --Check Status--
+# st.write("Status:", response.status_code)
+# st.write("Raw response:", response.text)
 
 if response.status_code == 200:
     df = pd.DataFrame(response.json(), columns=["datetime", "production_kw"])
@@ -58,9 +57,9 @@ if response.status_code == 200:
         st.dataframe(df["production_kw"].describe())
     with preview:
         st.write("Number of Results: " + str(len(df.index)))
-        if(preview_amount<=len(df.index)):
+        if preview_amount <= len(df.index):
             st.dataframe(df.head(preview_amount))
         else:
             st.dataframe(df.head(len(df.index)))
-else: 
-        st.write("No Data")
+else:
+    st.write("No Data")
