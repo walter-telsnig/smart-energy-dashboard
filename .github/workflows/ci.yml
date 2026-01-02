@@ -27,7 +27,9 @@ jobs:
           --health-retries=5
     
     env:
+      ENABLE_DB_ROUTERS: "1"
       DATABASE_URL: postgresql://postgres:ppswy2026@localhost:5432/pv-db
+      SED_DB_URL: postgresql://postgres:ppswy2026@localhost:5432/pv-db
 
     steps:
       - name: Checkout repository
