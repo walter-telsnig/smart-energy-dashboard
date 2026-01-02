@@ -4,7 +4,6 @@
 
 import os
 from fastapi import FastAPI
-# from infra.db import Base, engine
 
 from app.api.v1.accounts import router as accounts_router
 from app.api.v1.pv import router as pv_router

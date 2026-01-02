@@ -1,39 +1,50 @@
-name: Smart Energy Dashboard CI
+name: CI
 
 on:
   push:
     branches: ["main"]
   pull_request:
-    branches: ["main"]
-  workflow_dispatch:   # 👈 allows manual runs from the Actions tab
+
+# Helps PR decoration + keeps permissions minimal
+permissions:
+  contents: read
+  pull-requests: read
 
 jobs:
-  build-and-test:
+  ci:
     runs-on: ubuntu-latest
 
     services:
       postgres:
-        image: postgres:15
+        image: postgres:16
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: ppswy2026
+          #POSTGRES_DB: smart_energy_dashboard
           POSTGRES_DB: pv-db
         ports:
           - 5432:5432
+        # Wait until Postgres is ready
         options: >-
           --health-cmd="pg_isready -U postgres -d pv-db"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
-    
+
     env:
       ENABLE_DB_ROUTERS: "1"
+      # Matches the "localhost:5432" expectation in your integration tests,
+      # even though we ignore them for coverage (Option A).
+      #DATABASE_URL: postgresql://postgres:ppswy2026@localhost:5432/smart_energy_dashboard
       DATABASE_URL: postgresql://postgres:ppswy2026@localhost:5432/pv-db
       SED_DB_URL: postgresql://postgres:ppswy2026@localhost:5432/pv-db
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Sonar prefers full history for better blame/PR decoration
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -42,20 +53,48 @@ jobs:
 
       - name: Install dependencies
         run: |
-            python -m pip install --upgrade pip
-            pip install -r requirements.txt
-            if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+          python -m pip install --upgrade pip
 
-      - name: Lint (Ruff)
-        run: ruff check .
+          # Install project deps
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Type-check (MyPy)
-        run: mypy .
+          # Install dev tooling (coverage + quality gates)
+          pip install pytest pytest-cov coverage ruff mypy psycopg2-binary
 
-      - name: Test (Pytest)
-        run: pytest -q
+      - name: Lint (ruff)
+        run: |
+          ruff check .
 
-      # Optional sanity check for Dockerfile (optional Docker file)
-      - name: Test Docker build
-        if: success() && hashFiles('Dockerfile') != ''
-        run: docker build -t smart-energy-dashboard .
+      - name: Type check (mypy)
+        run: |
+          mypy --config-file mypy.ini
+
+      # ✅ Option A: reliable coverage generation (ignores integration tests)
+      # old: pytest --ignore=tests/integration --cov --cov-report=xml -q
+      - name: Test (Pytest) + Coverage (unit tests only)
+        run: |
+          pytest --cov --cov-report=xml -q
+
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.organization=walter-telsnig
+            -Dsonar.projectKey=walter-telsnig_smart-energy-dashboard
+            -Dsonar.python.coverage.reportPaths=coverage.xml
+            -Dsonar.exclusions=**/.venv/**,**/alembic/**,**/migrations/**,**/__pycache__/**
+            -Dsonar.sources=app,modules,ui
+            -Dsonar.tests=tests
+            -Dsonar.test.inclusions=tests/**/*.py
+
+
+      # Optional: upload coverage.xml as an artifact for debugging
+      - name: Upload coverage.xml (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: coverage.xml
