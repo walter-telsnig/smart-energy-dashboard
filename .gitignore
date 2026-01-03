@@ -28,3 +28,4 @@ Install.md
 coverage.xml
 htmlcov/
 .coverage
+ui/.user_settings.json
