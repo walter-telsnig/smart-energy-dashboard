@@ -6,3 +6,5 @@ pytest
 ruff
 psycopg2-binary
 types-psycopg2
+types-requests
+types-pytz

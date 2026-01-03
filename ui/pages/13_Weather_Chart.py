@@ -22,26 +22,27 @@ left, right = st.columns(2)
 with left:
     start = cast(date, st.date_input("Start", value=datetime(now.year, 1, 1)))
 with right:
-    end = cast(date, st.date_input("End", value=datetime(now.year, 1,1)+pd.Timedelta(days=7)))
+    end = cast(
+        date,
+        st.date_input("End", value=datetime(now.year, 1, 1) + pd.Timedelta(days=7)),
+    )
 
 start_ts = pd.Timestamp(start, tz="UTC")
 end_ts = pd.Timestamp(end, tz="UTC") + pd.Timedelta(days=1)
 
 response = requests.get(
-    path+"/list",
-    params={
-        "start": start_ts.isoformat(),
-        "end": end_ts.isoformat()
-    }
+    path + "/list", params={"start": start_ts.isoformat(), "end": end_ts.isoformat()}
 )
 
-#--Check Status--
-#st.write("Status:", response.status_code)
-#st.write("Raw response:", response.text)
-preview_amount = st.number_input("preview_amount",value=48)
+# --Check Status--
+# st.write("Status:", response.status_code)
+# st.write("Raw response:", response.text)
+preview_amount = st.number_input("preview_amount", value=48)
 
-if response.status_code == 200: 
-    df = pd.DataFrame(response.json(), columns=["datetime", "temp_c", "cloud_cover_pct"])
+if response.status_code == 200:
+    df = pd.DataFrame(
+        response.json(), columns=["datetime", "temp_c", "cloud_cover_pct"]
+    )
     df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
 
     chart_temp, stats, preview = st.tabs(["Charts", "Stats", "Preview"])
@@ -51,10 +52,10 @@ if response.status_code == 200:
         st.write("Line Chart - Cloud Cover in %")
         st.line_chart(df.set_index("datetime")["cloud_cover_pct"])
     with stats:
-        st.dataframe(df.iloc[:,1:].describe())
+        st.dataframe(df.iloc[:, 1:].describe())
     with preview:
         st.write("Number of Results: " + str(len(df.index)))
-        if(preview_amount<=len(df.index)):
+        if preview_amount <= len(df.index):
             st.dataframe(df.head(preview_amount))
         else:
             st.dataframe(df.head(len(df.index)))

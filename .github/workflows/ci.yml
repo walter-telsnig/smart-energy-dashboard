@@ -32,10 +32,12 @@ jobs:
           --health-retries=5
 
     env:
+      ENABLE_DB_ROUTERS: "1"
       # Matches the "localhost:5432" expectation in your integration tests,
       # even though we ignore them for coverage (Option A).
       #DATABASE_URL: postgresql://postgres:ppswy2026@localhost:5432/smart_energy_dashboard
       DATABASE_URL: postgresql://postgres:ppswy2026@localhost:5432/pv-db
+      SED_DB_URL: postgresql://postgres:ppswy2026@localhost:5432/pv-db
 
     steps:
       - name: Checkout
@@ -69,10 +71,12 @@ jobs:
 
       # ✅ Option A: reliable coverage generation (ignores integration tests)
       # old: pytest --ignore=tests/integration --cov --cov-report=xml -q
-      - name: Test (Pytest) + Coverage (unit tests only)
+      # - name: Test (Pytest) + Coverage (unit tests only)
+      #   run: |
+      #     pytest --cov --cov-report=xml -q
+      - name: Test (Pytest) + Coverage (backend only)
         run: |
-          pytest --cov --cov-report=xml -q
-
+         pytest -q --cov=app --cov=modules --cov-report=xml
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
@@ -85,9 +89,11 @@ jobs:
             -Dsonar.projectKey=walter-telsnig_smart-energy-dashboard
             -Dsonar.python.coverage.reportPaths=coverage.xml
             -Dsonar.exclusions=**/.venv/**,**/alembic/**,**/migrations/**,**/__pycache__/**
-            -Dsonar.sources=app,modules
+            -Dsonar.sources=app,modules,ui
             -Dsonar.tests=tests
             -Dsonar.test.inclusions=tests/**/*.py
+            -Dsonar.coverage.exclusions=ui/**,scripts/**,tests/**
+            -Dsonar.cpd.exclusions=ui/pages/*DB*.py
 
 
       # Optional: upload coverage.xml as an artifact for debugging
