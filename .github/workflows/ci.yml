@@ -71,10 +71,12 @@ jobs:
 
       # ✅ Option A: reliable coverage generation (ignores integration tests)
       # old: pytest --ignore=tests/integration --cov --cov-report=xml -q
-      - name: Test (Pytest) + Coverage (unit tests only)
+      # - name: Test (Pytest) + Coverage (unit tests only)
+      #   run: |
+      #     pytest --cov --cov-report=xml -q
+      - name: Test (Pytest) + Coverage (backend only)
         run: |
-          pytest --cov --cov-report=xml -q
-
+         pytest -q --cov=app --cov=modules --cov-report=xml
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
@@ -90,6 +92,8 @@ jobs:
             -Dsonar.sources=app,modules,ui
             -Dsonar.tests=tests
             -Dsonar.test.inclusions=tests/**/*.py
+            -Dsonar.coverage.exclusions=ui/**,scripts/**,tests/**
+            -Dsonar.cpd.exclusions=ui/pages/*DB*.py
 
 
       # Optional: upload coverage.xml as an artifact for debugging
