@@ -4,5 +4,11 @@
     "default_range_days": 7,
     "recommend_block_hours": 4,
     "dev_show_api_base": false
+  },
+  "wtelsnig@edu.aau.at": {
+    "default_view_mode": "Hourly View",
+    "default_range_days": 7,
+    "recommend_block_hours": 4,
+    "dev_show_api_base": false
   }
 }
