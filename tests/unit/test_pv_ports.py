@@ -1,5 +1,5 @@
 from typing import List
-from modules.pv.ports import PVRepositoryPort
+#from modules.pv.ports import PVRepositoryPort
 from modules.pv.domain import PVTimeSeries, PVPoint
 
 class MockPVRepository:
