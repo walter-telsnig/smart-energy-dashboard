@@ -2,30 +2,28 @@
 """
 PV page: View PV series from CSV or API.
 - Tabs: Chart | Stats | Preview
-- Robust API mode for your backend:
-  * /api/v1/pv/catalog -> {"items":[{"key": "...", "filename": "...", ...}, ...]}
-  * /api/v1/pv/head?key=<key>&n=<n> -> {"key": "...", "count": n, "rows":[{"timestamp":"...", "value": ...}, ...]}
 """
 
 from __future__ import annotations
-import streamlit as st
-import pandas as pd
-from pathlib import Path
-import requests
-from typing import List
-from utils.theme import apply_global_style, sidebar_nav
-from utils.auth import auth_headers
 
-st.set_page_config(
-    layout="wide", page_title="PV • Smart Energy Dashboard", page_icon="☀️"
-)
+import re
+from pathlib import Path
+from typing import List
+
+import pandas as pd
+import requests
+import streamlit as st
+
+from utils.auth import auth_headers
+from utils.theme import apply_global_style, sidebar_nav
+
+st.set_page_config(layout="wide", page_title="PV • Smart Energy Dashboard", page_icon="☀️")
 
 apply_global_style()
 sidebar_nav(active="PV")
 
-if (
-    "token" not in st.session_state or not st.session_state["token"]
-):  # auth gate, redirected to login
+# Auth gate
+if "token" not in st.session_state or not st.session_state["token"]:
     st.switch_page("pages/00_Login.py")
 
 st.title("☀️ PV Production")
@@ -37,25 +35,16 @@ DEFAULTS = [
     DATA_DIR / "pv_2027_hourly.csv",
 ]
 
-use_api = st.toggle(
-    "Use FastAPI endpoints (Default)",
-    value=True,
-    help="/api/v1/pv/... must be running on localhost:8000",
-)
-if "api_base" not in st.session_state:
-    st.session_state["api_base"] = "http://localhost:8000"
 
-st.session_state["api_base"] = st.text_input(
-    "API base",
-    value=st.session_state["api_base"],
-    disabled=not use_api,
-)
-api_base = st.session_state["api_base"]
+def infer_year_from_key(key: str) -> int | None:
+    m = re.search(r"(19|20)\d{2}", key)
+    return int(m.group(0)) if m else None
 
 
 @st.cache_data(show_spinner=False)
 def load_csv(path: str) -> pd.DataFrame:
     df = pd.read_csv(path)
+
     # Normalize time column
     if "datetime" not in df.columns:
         if "timestamp" in df.columns:
@@ -66,7 +55,7 @@ def load_csv(path: str) -> pd.DataFrame:
             )
     df["datetime"] = pd.to_datetime(df["datetime"], utc=True)
 
-    # Normalize value column (prefer energy kWh; convert kW->kWh for hourly)
+    # Normalize value column
     value_col: str
     if "production_kwh" in df.columns:
         value_col = "production_kwh"
@@ -80,9 +69,7 @@ def load_csv(path: str) -> pd.DataFrame:
             raise KeyError(
                 f"Could not detect PV value column in '{path}'. Columns: {list(df.columns)}"
             )
-        # fall back to the second column but enforce str typing
-        fallback = str(df.columns[1])
-        value_col = fallback
+        value_col = str(df.columns[1])
 
     return (
         df[["datetime", value_col]]
@@ -94,77 +81,58 @@ def load_csv(path: str) -> pd.DataFrame:
 
 @st.cache_data(show_spinner=True)
 def pv_catalog_api(base: str) -> List[str]:
-    """
-    Parse catalog of the form:
-      {"items":[{"key":"pv_2025_hourly","filename":"pv_2025_hourly.csv", ...}, ...]}
-    Return list of keys.
-    """
     url = f"{base}/api/v1/pv/catalog"
-    r = requests.get(
-        url,
-        timeout=10,
-        headers=auth_headers(),
-    )
-
+    r = requests.get(url, timeout=10, headers=auth_headers())
     r.raise_for_status()
     data = r.json()
+
     if isinstance(data, dict) and "items" in data and isinstance(data["items"], list):
-        keys = [str(item.get("key", "")) for item in data["items"] if item.get("key")]
-        return keys
-    # Fallbacks (older shapes)
+        return [str(item.get("key")) for item in data["items"] if item.get("key")]
+
     if isinstance(data, dict) and "series" in data and isinstance(data["series"], list):
         return [str(x) for x in data["series"]]
+
     if isinstance(data, list):
         return [str(x) for x in data]
+
     return []
 
 
 @st.cache_data(show_spinner=True)
 def pv_range_api(base: str, key: str, start: str, end: str) -> pd.DataFrame:
-    """
-    GET /api/v1/pv/range?key=...&start=...&end=...
-    """
     if not key:
         return pd.DataFrame()
 
     url = f"{base}/api/v1/pv/range"
-    params = [("key", key), ("start", start), ("end", end)]
     r = requests.get(
         url,
-        params=params,
+        params=[("key", key), ("start", start), ("end", end)],
         timeout=15,
         headers=auth_headers(),
     )
-
     r.raise_for_status()
     data = r.json()
     rows = data.get("rows", [])
-    df = pd.DataFrame(rows)
+    if not rows:
+        return pd.DataFrame()
 
+    df = pd.DataFrame(rows)
     if df.empty:
         return df
 
-    # Normalize columns
     if "datetime" in df.columns:
         ts_col = "datetime"
     elif "timestamp" in df.columns:
         ts_col = "timestamp"
     else:
-        # Fallback if empty or malformed
-        return df
+        return pd.DataFrame()
 
-    # Value column mapping
     if "value" in df.columns:
         val_col = "value"
     elif "production_kwh" in df.columns:
         val_col = "production_kwh"
     else:
-        # Check for numeric fallback
-        num = [
-            c
-            for c in df.columns
-            if c != ts_col and pd.api.types.is_numeric_dtype(df[c])
-        ]
+        num = [c for c in df.columns if c != ts_col and pd.api.types.is_numeric_dtype(df[c])]
         val_col = num[0] if num else df.columns[-1]
 
     df[ts_col] = pd.to_datetime(df[ts_col], utc=True)
@@ -172,13 +140,24 @@ def pv_range_api(base: str, key: str, start: str, end: str) -> pd.DataFrame:
     return df.set_index("datetime")[["production_kwh"]].sort_index()
 
 
-# --- Main Logic ---
-
-pv_df_full = None  # Setup for CSV mode
-api_defaults = (
-    pd.date_range("2025-01-01", periods=1).date[0],
-    pd.date_range("2025-01-07", periods=1).date[0],
+# --- UI ---
+use_api = st.toggle(
+    "Use FastAPI endpoints (Default)",
+    value=True,
+    help="/api/v1/pv/... must be running on localhost:8000",
 )
+
+if "api_base" not in st.session_state:
+    st.session_state["api_base"] = "http://localhost:8000"
+
+st.session_state["api_base"] = st.text_input(
+    "API base",
+    value=st.session_state["api_base"],
+    disabled=not use_api,
+)
+api_base = st.session_state["api_base"]
+
+pv_df_full: pd.DataFrame | None = None
 
 if use_api:
     try:
@@ -190,26 +169,27 @@ if use_api:
         if "pv_key" not in st.session_state:
             st.session_state.pv_key = series[0]
 
-        idx = (
-            series.index(st.session_state.pv_key)
-            if st.session_state.pv_key in series
-            else 0
-        )
+        idx = series.index(st.session_state.pv_key) if st.session_state.pv_key in series else 0
         st.session_state.pv_key = st.selectbox(
             "Select PV series (API)", options=series, index=idx
         )
 
-        # API Defaults
-        d_start, d_end = api_defaults
+        # default date range follows the selected series year
+        y = infer_year_from_key(st.session_state.pv_key) or 2025
+        d_start = pd.Timestamp(f"{y}-01-01").date()
+        d_end = pd.Timestamp(f"{y}-01-07").date()
+
     except Exception as e:
         st.error(f"API Error: {e}")
         st.stop()
+
 else:
     files = [str(p) for p in DEFAULTS if p.exists()]
     pv_path = st.selectbox("PV CSV", options=files or ["<missing>"])
     if pv_path == "<missing>":
         st.warning("No PV CSVs found")
         st.stop()
+
     pv_df_full = load_csv(pv_path)
     if not pv_df_full.empty:
         d_start = pv_df_full.index.min().date()
@@ -218,39 +198,44 @@ else:
             pv_df_full.index.max().date(),
         )
     else:
-        d_start, d_end = api_defaults
+        d_start = pd.Timestamp("2025-01-01").date()
+        d_end = pd.Timestamp("2025-01-07").date()
 
-# Date Selection
+# Date inputs
 left, right = st.columns(2)
 with left:
     start = st.date_input("Start", value=d_start)
 with right:
     end = st.date_input("End", value=d_end)
 
-# Fetch Data
-start_ts_iso = pd.Timestamp(str(start)).isoformat()
-end_ts_iso = (pd.Timestamp(str(end)) + pd.Timedelta(days=1)).isoformat()
+start_ts = pd.Timestamp(str(start), tz="UTC")
+end_ts = pd.Timestamp(str(end), tz="UTC") + pd.Timedelta(days=1)
 
 if use_api:
     try:
-        pv_sel = pv_range_api(
-            api_base, st.session_state.pv_key, start_ts_iso, end_ts_iso
-        )
+        pv_sel = pv_range_api(api_base, st.session_state.pv_key, start_ts.isoformat(), end_ts.isoformat())
     except Exception as e:
         st.error(f"API Fetch Failed: {e}")
         st.stop()
 else:
-    start_ts = pd.Timestamp(str(start), tz="UTC")
-    end_ts = pd.Timestamp(str(end), tz="UTC") + pd.Timedelta(days=1)
-    if pv_df_full is not None:
-        pv_sel = pv_df_full.loc[start_ts:end_ts]
-    else:
-        pv_sel = pd.DataFrame()
+    pv_sel = pv_df_full.loc[start_ts:end_ts] if pv_df_full is not None else pd.DataFrame()
 
 chart, stats, preview = st.tabs(["Chart", "Stats", "Preview"])
+
 with chart:
-    st.line_chart(pv_sel.rename(columns={"production_kwh": "PV (kWh)"}))
+    if pv_sel is None or pv_sel.empty:
+        st.warning("No data available for the selected year/date range.")
+    else:
+        st.line_chart(pv_sel.rename(columns={"production_kwh": "PV (kWh)"}))
+
 with stats:
-    st.dataframe(pv_sel.describe())
+    if pv_sel is None or pv_sel.empty or pv_sel.shape[1] == 0:
+        st.warning("No data available for the selected year/date range.")
+    else:
+        st.dataframe(pv_sel.describe())
+
 with preview:
-    st.dataframe(pv_sel.head(48))
+    if pv_sel is None or pv_sel.empty:
+        st.info("No rows to preview for the selected range.")
+    else:
+        st.dataframe(pv_sel.head(48))
