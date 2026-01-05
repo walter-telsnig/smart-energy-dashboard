@@ -7,11 +7,20 @@ from typing import cast
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
-st.set_page_config(layout="wide")
+from utils.theme import apply_global_style, sidebar_nav
+
+st.set_page_config(layout="wide", page_title="PV Production Chart • Smart Energy Dashboard", page_icon="📊")
+apply_global_style()
+
+sidebar_nav(active="🗄️ PV Production • Chart") 
+
+if "token" not in st.session_state or not st.session_state["token"]:
+    st.switch_page("pages/00_Login.py")
 
 if "token" not in st.session_state or st.session_state["token"] is None:
     st.warning("Please log in to access this page.")
     st.stop()
+
 st.title("☀️ PV Production Chart - DB Version")
 
 option = st.selectbox("15 Minute/Hourly", ("15 Minute", "Hourly"))

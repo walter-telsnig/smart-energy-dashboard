@@ -6,12 +6,20 @@ import pytz
 from datetime import datetime, time, timedelta, date
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
+from utils.theme import apply_global_style, sidebar_nav
 
-st.set_page_config(layout="wide")
+st.set_page_config(layout="wide", page_title="Household Consumption DB Service • Smart Energy Dashboard", page_icon="📦")
+apply_global_style()
+
+sidebar_nav(active="🗄️ Consumption DB • Service") 
+
+if "token" not in st.session_state or not st.session_state["token"]:
+    st.switch_page("pages/00_Login.py")
 
 if "token" not in st.session_state or st.session_state["token"] is None:
     st.warning("Please log in to access this page.")
     st.stop()
+
 st.title("🏠 Household Consumption Service - Database Version")
 
 daten = {
