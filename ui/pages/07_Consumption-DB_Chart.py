@@ -8,7 +8,6 @@ from typing import cast
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
 from utils.theme import apply_global_style, sidebar_nav
-from utils.auth import auth_headers
 
 st.set_page_config(
     layout="wide", page_title="Household Consumption DB Chart • Smart Energy Dashboard", page_icon="📉"
