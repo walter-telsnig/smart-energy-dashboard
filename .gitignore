@@ -37,3 +37,6 @@ htmlcov/
 ui/.user_settings.json
 ui/.user_settings.json
 hello.py
+
+# Private / Misc
+etc/
