@@ -4,10 +4,11 @@ import requests
 import pandas as pd
 import pytz
 from datetime import datetime, time, timedelta, date
+from utils.theme import apply_global_style, sidebar_nav
+
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
-from utils.theme import apply_global_style, sidebar_nav
 
 st.set_page_config(layout="wide", page_title="Weather Service • Smart Energy Dashboard", page_icon="📊")
 apply_global_style()
