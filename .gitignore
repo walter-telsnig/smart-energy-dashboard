@@ -28,5 +28,15 @@ Install.md
 coverage.xml
 htmlcov/
 .coverage
+
+# notebooks
+*.ipynb
+**/.ipynb_checkpoints/
+
+# streamlit local settings
 ui/.user_settings.json
 ui/.user_settings.json
+hello.py
+
+# Private / Misc
+etc/
