@@ -4,6 +4,11 @@
 
 import os
 from fastapi import FastAPI
+from dotenv import load_dotenv
+
+load_dotenv()
+print(f"DEBUG: ENABLE_DB_ROUTERS={os.getenv('ENABLE_DB_ROUTERS')}")
+
 
 from app.api.v1.accounts import router as accounts_router
 from app.api.v1.pv import router as pv_router
