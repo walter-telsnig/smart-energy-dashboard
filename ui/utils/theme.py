@@ -4,6 +4,7 @@ shared UI theme and navigation for the Smart Energy Dashboard
 """
 
 from __future__ import annotations
+
 import streamlit as st
 
 
@@ -25,7 +26,7 @@ def apply_global_style() -> None:
             border-right: 1px solid rgba(255,255,255,0.08);
           }
 
-          /* Make ALL sidebar text readable (fix “REPORTING/SETTINGS not visible”) */
+          /* Make ALL sidebar text readable */
           section[data-testid="stSidebar"] * { color: #eaf2ff !important; }
 
           /* Sidebar spacing */
@@ -56,7 +57,7 @@ def apply_global_style() -> None:
             text-transform: uppercase;
           }
 
-          /* Sidebar buttons (dark style like your Dashboard) */
+          /* Sidebar buttons */
           section[data-testid="stSidebar"] .stButton>button{
             width: 100%;
             border-radius: 12px !important;
@@ -69,6 +70,52 @@ def apply_global_style() -> None:
           section[data-testid="stSidebar"] .stButton>button:hover{
             background: rgba(255,255,255,0.12) !important;
             border-color: rgba(255,255,255,0.18) !important;
+          }
+
+          /* ---------- DB MODE BOX ---------- */
+          .db-box {
+            border-radius: 16px;
+            padding: 12px 12px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.05);
+            margin-top: 10px;
+          }
+
+          .db-box-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 900;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            font-size: 0.78rem;
+            opacity: 0.95;
+            margin-bottom: 8px;
+          }
+
+          .db-pill {
+            font-size: 0.68rem;
+            padding: 2px 10px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.16);
+            font-weight: 800;
+          }
+
+          .db-subgroup {
+            font-size: 0.70rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            opacity: 0.85;
+            font-weight: 900;
+            margin: 10px 0 6px 0;
+          }
+
+          .db-divider {
+            height: 1px;
+            background: rgba(255,255,255,0.10);
+            margin: 10px 0;
+            border-radius: 1px;
           }
 
           /* KPI cards */
@@ -94,28 +141,27 @@ def apply_global_style() -> None:
 
 
 def sidebar_nav(active: str = "Dashboard") -> None:
-    from utils.settings import load_settings  # local import = minimal side effects
+    from utils.settings import load_settings
 
-    # Initialize default view_mode once per session (do not override user changes)
+    # Defaults only once per session
     if "view_mode" not in st.session_state:
         st.session_state["view_mode"] = load_settings().get(
             "default_view_mode", "Hourly View"
         )
 
+    if "show_db_mode" not in st.session_state:
+        st.session_state["show_db_mode"] = False
+
     with st.sidebar:
-        st.markdown(
-            '<div class="sb-title">Smart Energy Dashboard</div>', unsafe_allow_html=True
-        )
+        st.markdown('<div class="sb-title">Smart Energy Dashboard</div>', unsafe_allow_html=True)
         st.markdown(
             '<div class="sb-subtitle">Track, analyze, optimize your energy.</div>',
             unsafe_allow_html=True,
         )
 
-        def nav_btn(label: str, target: str | None, key: str):
+        def nav_btn(label: str, target: str | None, key: str) -> None:
             if label == active:
-                clicked = st.button(
-                    label, use_container_width=True, key=key, type="primary"
-                )
+                clicked = st.button(label, use_container_width=True, key=key, type="primary")
             else:
                 clicked = st.button(label, use_container_width=True, key=key)
 
@@ -125,6 +171,7 @@ def sidebar_nav(active: str = "Dashboard") -> None:
                 else:
                     st.switch_page(target)
 
+        # -------- Core pages --------
         nav_btn("🏠  Dashboard", "app.py", "nav_dashboard")
         nav_btn("☀️  PV", "pages/01_PV.py", "nav_pv")
         nav_btn("💶  Prices", "pages/02_Prices.py", "nav_prices")
@@ -133,11 +180,43 @@ def sidebar_nav(active: str = "Dashboard") -> None:
         nav_btn("✅  Recommendations", "pages/06_Recommendations.py", "nav_reco")
         nav_btn("🔋  Battery Sim", "pages/99_Battery_Sim.py", "nav_battery")
 
-        # NEW: Settings page (minimal)
+        # -------- Database Mode toggle --------
+        st.session_state["show_db_mode"] = st.toggle(
+            "Show Database Mode",
+            value=st.session_state["show_db_mode"],
+            key="toggle_show_db_mode",
+        )
+
+        if st.session_state["show_db_mode"]:
+            st.markdown(
+                """
+                <div class="db-box">
+                  <div class="db-box-header">
+                    Database Mode <span class="db-pill">DB</span>
+                  </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            st.markdown('<div class="db-subgroup">Charts</div>', unsafe_allow_html=True)
+            nav_btn("📉  Consumption • DB Chart", "pages/07_Consumption-DB_Chart.py", "nav_db_cons_chart")
+            nav_btn("💹  Prices • DB Chart", "pages/09_Prices-DB_Chart.py", "nav_db_prices_chart")
+            nav_btn("📊  PV • DB Chart", "pages/11_PV-DB_Chart.py", "nav_db_pv_chart")
+            nav_btn("☁️  Weather • DB Chart", "pages/13_Weather_Chart.py", "nav_db_weather_chart")
+
+            st.markdown('<div class="db-divider"></div>', unsafe_allow_html=True)
+            st.markdown('<div class="db-subgroup">Services</div>', unsafe_allow_html=True)
+            nav_btn("📦  Consumption • DB Service", "pages/08_Consumption-DB_Service.py", "nav_db_cons_service")
+            nav_btn("🗃️  Prices • DB Service", "pages/10_Prices-DB_Service.py", "nav_db_prices_service")
+            nav_btn("☀️  PV • DB Service", "pages/12_PV-DB_Service.py", "nav_db_pv_service")
+            nav_btn("🌦️  Weather • DB Service", "pages/14_Weather_Service.py", "nav_db_weather_service")
+
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        # -------- Settings --------
         nav_btn("⚙️  Settings", "pages/07_Settings.py", "nav_settings")
 
         st.markdown('<div class="sb-group">Reporting</div>', unsafe_allow_html=True)
-
         st.session_state["view_mode"] = st.radio(
             "Data Range",
             ["Daily View", "Hourly View"],
