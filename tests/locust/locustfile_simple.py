@@ -1,5 +1,4 @@
 from locust import HttpUser, task, between
-import random
 
 class SmartEnergyUser(HttpUser):
     # approximate wait time between tasks (simulating user think time)

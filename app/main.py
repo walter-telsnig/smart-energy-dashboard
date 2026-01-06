@@ -6,10 +6,6 @@ import os
 from fastapi import FastAPI
 from dotenv import load_dotenv
 
-load_dotenv()
-print(f"DEBUG: ENABLE_DB_ROUTERS={os.getenv('ENABLE_DB_ROUTERS')}")
-
-
 from app.api.v1.accounts import router as accounts_router
 from app.api.v1.pv import router as pv_router
 
@@ -24,6 +20,8 @@ from app.api.v1.consumption import router as consumption_router
 from app.api.v1.market import router as market_router
 from app.api.v1.battery import router as battery_router
 
+load_dotenv()
+print(f"DEBUG: ENABLE_DB_ROUTERS={os.getenv('ENABLE_DB_ROUTERS')}")
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Smart Energy Dashboard API", version="0.1.0")
