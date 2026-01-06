@@ -9,4 +9,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: pv-db
     volumes:
-      - ./data:/var/lib/postgres/data
+      - postgres_db_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_db_data:
+  

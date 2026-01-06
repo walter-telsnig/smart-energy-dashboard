@@ -41,3 +41,18 @@ docker exec -i postgres-db psql -U postgres -d pv-db -c "SELECT count(*) FROM pv
 docker exec -i postgres-db psql -U postgres -d pv-db -c "SELECT count(*) FROM consumption_minute;"
 docker exec -i postgres-db psql -U postgres -d pv-db -c "SELECT count(*) FROM market_minute;"
 ```
+
+
+old script docker
+services:
+  db:
+    image: postgres:15
+    container_name: postgres-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: pv-db
+    volumes:
+      - ./data:/var/lib/postgres/data
