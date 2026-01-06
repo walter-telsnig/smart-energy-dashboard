@@ -148,6 +148,6 @@ The project development is divided into strategic milestones:
 
 - [x] **Milestone 1: API Layer & Accounts** - Basic CRUD and layered architecture setup.
 - [x] **Milestone 2: Quality Gates** - CI pipeline, linting (Ruff), and type checking (Mypy).
-- [ ] **Milestone 3: DevOps Slice** - Dockerization and Postgres integration.
-- [ ] **Milestone 4: Authentication** - JWT implementation and secure access.
+- [x] **Milestone 3: DevOps Slice** - Dockerization and Postgres integration.
+- [x] **Milestone 4: Authentication** - JWT implementation and secure access.
 - [x] **Milestone 5: Visualization** - Advanced analytic dashboard with Streamlit.
