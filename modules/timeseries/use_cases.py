@@ -6,6 +6,9 @@ from typing import Iterable, Optional
 
 import pandas as pd
 
+from core.settings import settings
+from infra.weather.open_meteo import get_hourly_forecast_df
+
 
 DATA_BASE = Path("infra") / "data"
 PV_DIR = DATA_BASE / "pv"
@@ -59,6 +62,8 @@ def load_merged_history(years: Iterable[int] = (2025, 2026, 2027)) -> pd.DataFra
 
         df = pv.merge(cons, on="datetime", how="inner").merge(price, on="datetime", how="inner")
 
+        # Keep CSV-based weather in history (useful fallback/offline).
+        # Live weather (Open-Meteo) will be injected later for the plan window.
         if weather_path.exists():
             weather = _read_csv(weather_path)
             for col in ["temp_c", "cloud_cover_pct"]:
@@ -119,12 +124,59 @@ def _fallback_profile(history: pd.DataFrame, today_start: pd.Timestamp) -> pd.Da
     return hist
 
 
+def _inject_live_weather_if_enabled(plan: pd.DataFrame, start: pd.Timestamp, end: pd.Timestamp) -> pd.DataFrame:
+    """
+    If SED_WEATHER_MODE=open_meteo, fetch hourly forecast and overwrite
+    plan['temp_c'] and plan['cloud_cover_pct'] for the plan window.
+
+    If the API call fails for any reason, keep the plan as-is (fallback to CSV/offline).
+    """
+    if getattr(settings, "weather_mode", "csv") != "open_meteo":
+        return plan
+
+    try:
+        forecast = get_hourly_forecast_df(
+            latitude=settings.weather_lat,
+            longitude=settings.weather_lon,
+            start_dt_utc=start.to_pydatetime(),
+            end_dt_utc=end.to_pydatetime(),
+            timeout_s=settings.weather_timeout_s,
+            cache_ttl_s=settings.weather_cache_ttl_s,
+        )
+    except Exception:
+        # Keep behavior non-breaking: if Open-Meteo fails, we keep whatever values exist (CSV/offline/None).
+        return plan
+
+    if forecast.empty:
+        return plan
+
+    # Merge and prefer forecast values where available
+    forecast = forecast.copy()
+    forecast["datetime"] = pd.to_datetime(forecast["datetime"], utc=True)
+
+    out = plan.merge(forecast[["datetime", "temp_c", "cloud_cover_pct"]], on="datetime", how="left", suffixes=("", "_forecast"))
+
+    # Overwrite if forecast has a value; else keep existing
+    out["temp_c"] = out["temp_c_forecast"].combine_first(out["temp_c"])
+    out["cloud_cover_pct"] = out["cloud_cover_pct_forecast"].combine_first(out["cloud_cover_pct"])
+
+    out = out.drop(columns=["temp_c_forecast", "cloud_cover_pct_forecast"])
+    out["temp_c"] = pd.to_numeric(out["temp_c"], errors="coerce")
+    out["cloud_cover_pct"] = pd.to_numeric(out["cloud_cover_pct"], errors="coerce")
+
+    return out
+
+
 def build_today_plan(hours: int, history: Optional[pd.DataFrame] = None) -> pd.DataFrame:
     """
     Real-data-first plan for [today 00:00 UTC, today+hours):
 
     - If the dataset contains those exact hours => return them directly (best case)
     - If partially missing => fill missing hours by repeating a 24h fallback profile
+
+    Weather:
+    - Default (csv): keep whatever history provides (CSV weather or None)
+    - open_meteo: overwrite temp/cloud for the plan window with live forecast
     """
     if history is None:
         history = load_merged_history()
@@ -133,6 +185,7 @@ def build_today_plan(hours: int, history: Optional[pd.DataFrame] = None) -> pd.D
 
     window = window_for_today_utc(hours)
     start = window.start
+    end = window.end
 
     idx = pd.date_range(start, periods=hours, freq="h", tz="UTC")
 
@@ -145,6 +198,7 @@ def build_today_plan(hours: int, history: Optional[pd.DataFrame] = None) -> pd.D
     # If everything exists, return immediately
     if plan[["pv_kwh", "load_kwh", "price_eur_kwh"]].notna().all(axis=None):
         plan = plan.reset_index().rename(columns={"index": "datetime"})
+        plan = _inject_live_weather_if_enabled(plan, start, end)
         return plan
 
     # Fill gaps using fallback repeating pattern
@@ -178,4 +232,9 @@ def build_today_plan(hours: int, history: Optional[pd.DataFrame] = None) -> pd.D
                 }
             )
 
-    return pd.DataFrame(filled_rows)
+    out = pd.DataFrame(filled_rows)
+    out["datetime"] = pd.to_datetime(out["datetime"], utc=True)
+
+    # Finally inject live weather if enabled (overwrites temp/cloud for the whole plan window)
+    out = _inject_live_weather_if_enabled(out, start, end)
+    return out
