@@ -154,7 +154,7 @@ if (
         except Exception:
             pass
 
-w1, w2, w3 = st.columns([1.2, 1.2, 3.6])
+w1, w2, w3 = st.columns([1.4, 1.4, 0.6])
 
 with w1:
     if temp_val is not None:
@@ -175,9 +175,20 @@ with w2:
         st.metric("Cloud cover", "n/a")
 
 with w3:
-    # Small visual hint next to metrics
+    # Big icon centered vertically with metrics
     st.markdown(
-        f"<div style='padding-top: 6px; font-size: 22px; opacity: 0.9;'>{cloud_icon}</div>",
+        f"""
+        <div style="
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            height: 88px;           /* matches roughly the metric block height */
+            font-size: 58px;        /* BIG icon */
+            line-height: 1;
+            opacity: 0.95;">
+            {cloud_icon}
+        </div>
+        """,
         unsafe_allow_html=True,
     )
 
