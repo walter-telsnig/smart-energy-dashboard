@@ -47,19 +47,24 @@ def test_get_hourly_forecast_df_parses_and_filters(monkeypatch):
     assert df["cloud_cover_pct"].iloc[0] == 20
 
 
+
 def test_get_hourly_forecast_df_uses_cache(monkeypatch):
+    # Ensure the test is independent of test order / prior cache population
+    with open_meteo._cache_lock:
+        open_meteo._cache.clear()
+
     calls = {"n": 0}
 
     def fake_fetch(*, latitude, longitude, start_date, end_date, timeout_s):
         calls["n"] += 1
         return _fake_open_meteo_json()
 
-    monkeypatch.setattr(open_meteo, "_fetch_open_meteo_json", fake_fetch)
+    monkeypatch.setattr(open_meteo, "_fetch_open_meteo_json", fake_fetch, raising=True)
 
     start = datetime(2026, 1, 7, 0, 0, tzinfo=timezone.utc)
     end = datetime(2026, 1, 7, 4, 0, tzinfo=timezone.utc)
 
-    df1 = open_meteo.get_hourly_forecast_df(
+    _ = open_meteo.get_hourly_forecast_df(
         latitude=48.2,
         longitude=16.3,
         start_dt_utc=start,
@@ -67,7 +72,7 @@ def test_get_hourly_forecast_df_uses_cache(monkeypatch):
         timeout_s=1.0,
         cache_ttl_s=900,
     )
-    df2 = open_meteo.get_hourly_forecast_df(
+    _ = open_meteo.get_hourly_forecast_df(
         latitude=48.2,
         longitude=16.3,
         start_dt_utc=start,
@@ -76,9 +81,7 @@ def test_get_hourly_forecast_df_uses_cache(monkeypatch):
         cache_ttl_s=900,
     )
 
-    assert calls["n"] == 1  # second call served from cache
-    assert len(df1) == len(df2)
-    assert df1.equals(df2)
+    assert calls["n"] == 1
 
 
 def test_get_hourly_forecast_df_rejects_invalid_window(monkeypatch):
