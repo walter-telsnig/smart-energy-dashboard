@@ -127,6 +127,9 @@ with left:
     )
 
 with right:
+    # push weather down a bit so it doesn't collide with the top white ribbon
+    st.markdown("<div style='height: 18px;'></div>", unsafe_allow_html=True)
+
     if (
         not ts_df.empty
         and "temp_c" in ts_df.columns
