@@ -72,9 +72,9 @@ def _fetch_open_meteo_json(
     Fetch Open-Meteo forecast JSON.
     Note: Open-Meteo uses date-based start/end for forecast windows; we filter to exact datetime range later.
     """
-    params = {
-        "latitude": latitude,
-        "longitude": longitude,
+    params: dict[str, str | int | float | bool | None] = {
+        "latitude": float(latitude),
+        "longitude": float(longitude),
         "hourly": ",".join(_HOURLY_VARS),
         "timezone": "UTC",
         "start_date": start_date.isoformat(),
