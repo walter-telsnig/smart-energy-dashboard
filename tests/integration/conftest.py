@@ -2,7 +2,6 @@ import pytest
 from fastapi.testclient import TestClient
 
 from infra.database import Base, engine
-import infra.models
 
 @pytest.fixture(scope="session", autouse=True)
 def create_test_db():

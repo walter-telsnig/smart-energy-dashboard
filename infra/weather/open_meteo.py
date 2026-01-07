@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone, date
 from threading import Lock
 from time import monotonic
-from typing import Any, Dict, Iterable, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import httpx
 import pandas as pd
