@@ -23,6 +23,12 @@ class Settings(BaseSettings):
     weather_timeout_s: float = 10.0
     weather_cache_ttl_s: int = 900  # 15 min cache for forecast calls
 
+    # Pattern detection thresholds (configurable)
+    pattern_night_threshold: float = 0.30
+    pattern_night_soft_threshold: float = 0.29
+    pattern_weekday_ratio_threshold: float = 1.3
+    pattern_weekday_soft_ratio: float = 1.1
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_prefix="SED_",         # e.g. SED_DB_URL, SED_WEATHER_MODE
