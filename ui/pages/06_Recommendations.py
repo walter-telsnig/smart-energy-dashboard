@@ -117,49 +117,71 @@ except Exception as e:
     st.stop()
 
 
-# ---------------- Header + Current Weather ----------------
-left, right = st.columns([3, 1])
+st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
 
-with left:
-    st.title("⚡ Energy Usage Recommendations")
-    st.caption(
-        "Simple, human-friendly suggestions based on PV, consumption, prices, and weather"
+st.title("⚡ Energy Usage Recommendations")
+st.caption(
+    "Simple, human-friendly suggestions based on PV, consumption, prices, and weather"
+)
+
+st.markdown("<div style='height: 6px;'></div>", unsafe_allow_html=True)
+
+temp_val = None
+cloud_val = None
+cloud_icon = "☁️"
+
+if (
+    not ts_df.empty
+    and "temp_c" in ts_df.columns
+    and "cloud_cover_pct" in ts_df.columns
+):
+    now = (pd.Timestamp.utcnow() + pd.Timedelta(hours=1)).floor("h")
+    current_slice = ts_df[ts_df["datetime"] <= now]
+    current_row = ts_df.iloc[0] if current_slice.empty else current_slice.iloc[-1]
+
+    temp_val = current_row.get("temp_c", None)
+    cloud_val = current_row.get("cloud_cover_pct", None)
+
+    if cloud_val is not None:
+        try:
+            c = float(cloud_val)
+            if c < 25:
+                cloud_icon = "☀️"
+            elif c < 70:
+                cloud_icon = "⛅"
+            else:
+                cloud_icon = "☁️"
+        except Exception:
+            pass
+
+w1, w2, w3 = st.columns([1.2, 1.2, 3.6])
+
+with w1:
+    if temp_val is not None:
+        try:
+            st.metric("Temperature", f"{float(temp_val):.1f} °C")
+        except Exception:
+            st.metric("Temperature", "n/a")
+    else:
+        st.metric("Temperature", "n/a")
+
+with w2:
+    if cloud_val is not None:
+        try:
+            st.metric("Cloud cover", f"{float(cloud_val):.0f} %")
+        except Exception:
+            st.metric("Cloud cover", "n/a")
+    else:
+        st.metric("Cloud cover", "n/a")
+
+with w3:
+    # Small visual hint next to metrics
+    st.markdown(
+        f"<div style='padding-top: 6px; font-size: 22px; opacity: 0.9;'>{cloud_icon}</div>",
+        unsafe_allow_html=True,
     )
 
-with right:
-    if (
-        not ts_df.empty
-        and "temp_c" in ts_df.columns
-        and "cloud_cover_pct" in ts_df.columns
-    ):
-        now = (pd.Timestamp.utcnow() + pd.Timedelta(hours=1)).floor("h")
-        current_slice = ts_df[ts_df["datetime"] <= now]
-        current_row = ts_df.iloc[0] if current_slice.empty else current_slice.iloc[-1]
-
-        temp = current_row.get("temp_c", None)
-        cloud = current_row.get("cloud_cover_pct", None)
-
-        cloud_icon = "☁️"
-        if cloud is not None:
-            try:
-                c = float(cloud)
-                if c < 25:
-                    cloud_icon = "☀️"
-                elif c < 70:
-                    cloud_icon = "⛅"
-                else:
-                    cloud_icon = "☁️"
-            except Exception:
-                pass
-
-        if temp is not None and cloud is not None:
-            st.markdown(f"### {cloud_icon} {float(temp):.1f}°C")
-            st.caption(f"Cloud cover: {float(cloud):.0f}%")
-        else:
-            st.caption("Weather: n/a")
-    else:
-        st.caption("Weather: n/a")
-
+st.divider()
 
 # ---------------- Highlight: current-hour suggestion ----------------
 if reco_df.empty:
@@ -189,7 +211,6 @@ st.info(
     f"**Right now ({current_time_str}) → {current_action_label}**  \n{current_reason}"
 )
 
-
 # ---------------- KPIs ----------------
 st.subheader("💰 Cost Impact")
 
@@ -206,7 +227,6 @@ kpi2.metric("Optimized cost (€)", f"{optimized:.2f}")
 kpi3.metric("Savings (€)", f"{savings:.2f}")
 kpi4.metric("Savings (%)", f"{savings_pct:.2f} %")
 
-
 # ---------------- Recommendations Table ----------------
 st.subheader("📋 Recommendation Plan")
 
@@ -214,7 +234,6 @@ reco_df["action_label"] = reco_df["action"].map(ACTION_LABELS).fillna(reco_df["a
 st.dataframe(
     reco_df[["timestamp", "action_label", "reason", "score"]], use_container_width=True
 )
-
 
 # ---------------- PV / Load / Price with overlay ----------------
 st.subheader("📈 PV, Load & Price (with recommendations)")
