@@ -140,8 +140,22 @@ To run the application (API + Database) using Docker Compose:
     - **Port:** `5432`
     - **User/Password:** (See `docker-compose.yml`)
 
----
 
+⚠️ **Note:**
+
+In Case of **404 Error** you have to set the ENABLE_DB_ROUTERS variable
+
+- Variant 1: Write in .env File:
+     ```.env
+         # .env
+          ENABLE_DB_ROUTERS=1
+     ```
+- Variant 2: Set per command before starting the backend server:
+    - Linux/maxOS: `export ENABLE_DB_ROUTERS=1`
+    - Windows Powershell: `$env:ENABLE_DB_ROUTERS="1"`
+    - Windows CMD: `set ENABLE_DB_ROUTERS=1`
+
+---
 ## 🗺️ Roadmap & Features
 
 The project development is divided into strategic milestones:
