@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Optional
@@ -9,6 +10,7 @@ import pandas as pd
 from core.settings import settings
 from infra.weather.open_meteo import get_hourly_forecast_df
 
+logger = logging.getLogger(__name__)
 
 DATA_BASE = Path("infra") / "data"
 PV_DIR = DATA_BASE / "pv"
@@ -143,18 +145,32 @@ def _inject_live_weather_if_enabled(plan: pd.DataFrame, start: pd.Timestamp, end
             timeout_s=settings.weather_timeout_s,
             cache_ttl_s=settings.weather_cache_ttl_s,
         )
-    except Exception:
-        # Keep behavior non-breaking: if Open-Meteo fails, we keep whatever values exist (CSV/offline/None).
+    except Exception as e:
+        # Non-breaking fallback, but log for observability
+        logger.warning(
+            "Open-Meteo weather fetch failed; falling back to CSV/offline weather. err=%s",
+            e,
+        )
         return plan
 
     if forecast.empty:
+        logger.info(
+            "Open-Meteo returned empty forecast for window start=%s end=%s; keeping CSV/offline weather.",
+            start,
+            end,
+        )
         return plan
 
     # Merge and prefer forecast values where available
     forecast = forecast.copy()
     forecast["datetime"] = pd.to_datetime(forecast["datetime"], utc=True)
 
-    out = plan.merge(forecast[["datetime", "temp_c", "cloud_cover_pct"]], on="datetime", how="left", suffixes=("", "_forecast"))
+    out = plan.merge(
+        forecast[["datetime", "temp_c", "cloud_cover_pct"]],
+        on="datetime",
+        how="left",
+        suffixes=("", "_forecast"),
+    )
 
     # Overwrite if forecast has a value; else keep existing
     out["temp_c"] = out["temp_c_forecast"].combine_first(out["temp_c"])
