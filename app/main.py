@@ -5,12 +5,16 @@
 import os
 from fastapi import FastAPI
 from dotenv import load_dotenv
+# from infra.db import Base, engine
 
 from app.api.v1.accounts import router as accounts_router
 from app.api.v1.pv import router as pv_router
 
 # IMPORTANT: import models BEFORE create_all so tables are known to SQLAlchemy
 from modules.accounts.model import Account  # noqa: F401
+from modules.pattern.model import Pattern, EnergyPersonality  # noqa: F401
+from modules.consumption.model import Consumption  # noqa: F401
+from modules.pv.model import PV  # noqa: F401
 
 from app.api.v1.auth import router as auth_router
 from app.api.v1.timeseries import router as timeseries_router
@@ -19,6 +23,7 @@ from app.api.v1.recommendations import router as recommendations_router
 from app.api.v1.consumption import router as consumption_router
 from app.api.v1.market import router as market_router
 from app.api.v1.battery import router as battery_router
+from app.api.v1.patterns import router as patterns_router
 
 load_dotenv()
 print(f"DEBUG: ENABLE_DB_ROUTERS={os.getenv('ENABLE_DB_ROUTERS')}")
@@ -40,6 +45,7 @@ def create_app() -> FastAPI:
     app.include_router(consumption_router, prefix="/api/v1")
     app.include_router(market_router, prefix="/api/v1")
     app.include_router(battery_router, prefix="/api/v1")
+    app.include_router(patterns_router, prefix="/api/v1")
 
     # Optional legacy DB routers (enabled only when explicitly requested)
     enable_db_routers = os.getenv("ENABLE_DB_ROUTERS", "0") == "1"
@@ -73,5 +79,5 @@ def create_app() -> FastAPI:
 
     return app
 
-
+# Base.metadata.create_all(bind=engine)  # dev/CI convenience
 app = create_app()
