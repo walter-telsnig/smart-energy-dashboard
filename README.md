@@ -140,6 +140,11 @@ To run the application (API + Database) using Docker Compose:
     - **Port:** `5432`
     - **User/Password:** (See `docker-compose.yml`)
 
+
+**Note**
+If there is a problem with 404 Error, set the ENABLE_DB_ROUTERS to 1
+
+
 ---
 
 ## 🗺️ Roadmap & Features
