@@ -8,9 +8,19 @@ class PatternType(str, Enum):
     NIGHT_OWL = "night_owl"
     WEEKDAY_WARRIOR = "weekday_warrior"
     MORNING_BIRD = "morning_bird"
+    EVENING_PEAKER = "evening_peaker"
+    DAYTIME_WORKER = "daytime_worker"
     CONSISTENT_USER = "consistent_user"
     SOLAR_ALIGNED = "solar_aligned"
     SOLAR_MISALIGNED = "solar_misaligned"
+    LOW_CONSUMER = "low_consumer"           # Uses less than average
+    HIGH_CONSUMER = "high_consumer"         # Uses more than average
+    WEEKEND_SPIKER = "weekend_spiker"       # Spikes on weekends
+    MORNING_RUSH = "morning_rush"           # Peak 7-9 AM
+    LUNCHTIME_DIP = "lunchtime_dip"         # Dip at noon
+    AFTERNOON_HIGH = "afternoon_high"       # High 2-5 PM
+    DINNER_PEAK = "dinner_peak"             # Peak 6-8 PM
+    LATE_EVENING = "late_evening"           # High 9-11 PM
 
 @dataclass(frozen=True)
 class EnergyPattern:
@@ -45,7 +55,12 @@ class PersonalityType(str, Enum):
     NIGHT_OWL = "night_owl"
     WEEKDAY_WARRIOR = "weekday_warrior"
     MORNING_ENERGIZER = "morning_energizer"
+    DAYTIME_WORKER = "daytime_worker"
+    EVENING_RELAXER = "evening_relaxer"
+    WEEKEND_HOST = "weekend_host"
     SOLAR_OPTIMIZER = "solar_optimizer"
+    ENERGY_MINIMALIST = "energy_minimalist"    
+    ENERGY_ENTHUSIAST = "energy_enthusiast"    
     UNPREDICTABLE = "unpredictable"
 
 @dataclass(frozen=True)
