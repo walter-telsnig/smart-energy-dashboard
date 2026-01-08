@@ -1,19 +1,15 @@
 # DTOs - API boundaries
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, ConfigDict
 from modules.pattern.domain import EnergyPattern, EnergyPersonality
 
 class PatternAnalysisRequestDTO(BaseModel):
     """Input for pattern analysis"""
     user_id: int
     days: int = Field(default=30, ge=7, le=90)
-    
-    @validator('days')
-    def validate_days(cls, v):
-        if v < 7:
-            raise ValueError("Need at least 7 days of data")
-        return v
+    # Validation via Field (ge=7, le=90) is sufficient in Pydantic v2
+    model_config = ConfigDict(from_attributes=True)
 
 class PatternDTO(BaseModel):
     """Output pattern DTO"""
@@ -24,8 +20,7 @@ class PatternDTO(BaseModel):
     detected_at: datetime
     priority: str
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class PersonalityDTO(BaseModel):
     """Output personality DTO"""
@@ -37,8 +32,7 @@ class PersonalityDTO(BaseModel):
     detected_at: datetime
     display_name: str
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class PatternAnalysisResultDTO(BaseModel):
     """Complete analysis result"""
