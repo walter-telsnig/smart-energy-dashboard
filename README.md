@@ -97,6 +97,11 @@ docker compose up -d
     - **Port:** `5432`
     - **User/Password:** (See `docker-compose.yml`)
 
+**Alembic upgrade for accounts table**
+```powershell
+alembic upgrade head
+```
+
 **FastAPI Backend**
  Starts the API server with hot-reload enabled.
 ```powershell
@@ -119,16 +124,6 @@ The application uses **JWT Authentication**. You must log in to access the dashb
 **Default Login:**
 There are no default users. You must create a user account.
 
-
-
-
-
-### Running Tests
-Execute the test suite using Pytest.
-```powershell
-pytest -q
-```
-
 ---
 
 ## Quality Assurance and Testing
@@ -139,6 +134,16 @@ All quality gates must pass before merging to `main`.
 - Pytest: unit and integration tests
 - GitHub Actions: CI on push and PR
 - Quality Gate: SonarQube [sonarcloud.io](https://sonarcloud.io/project/overview?id=walter-telsnig_smart-energy-dashboard)
+- Performance Testing: Locust
+
+### Performance Testing with Locust
+For load and performance testing, Locust is used as a Python-based, scriptable load-testing framework.
+To keep performance tests clearly separated from unit and integration tests, the Locust configuration is placed in a dedicated directory tests/locust.
+
+```powershell
+cd tests/locust
+python.exe -m locust -f locustfile.py --host http://localhost:8000
+```
 
 ## 🗺️ Project Scope & Roadmap
 
