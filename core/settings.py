@@ -15,7 +15,9 @@ class Settings(BaseSettings):
     # "open_meteo" enables live forecast from Open-Meteo (up to 7 days).
     weather_mode: Literal["csv", "open_meteo"] = "csv"
 
-    # Location for weather data - Klagenfurt
+    # Location currently set to Klagenfurt, Austria , if you want to set up another location
+    # please search the location coordinates here: https://www.latlong.net/
+    # and set the SED_WEATHER_LAT and SED_WEATHER_LON variables accordingly
     weather_lat: float = 46.6236
     weather_lon: float = 14.3075
 
