@@ -1,3 +1,5 @@
+![Smart Energy Dashboard](docs/images/ASE_Readme_Banner.png)
+
 # ⚡ Smart Energy Dashboard
 
 [![Smart Energy Dashboard CI](https://github.com/walter-telsnig/smart-energy-dashboard/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/walter-telsnig/smart-energy-dashboard/actions/workflows/ci.yml?query=branch%3Amain)
