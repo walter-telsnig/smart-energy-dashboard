@@ -1,6 +1,6 @@
 import pandas as pd
 from datetime import datetime, date
-from typing import List, Tuple, Optional, Dict
+from typing import List, Tuple, Optional
 from ..domain import EnergyPattern, PatternType
 
 class PatternAnalyzer:
