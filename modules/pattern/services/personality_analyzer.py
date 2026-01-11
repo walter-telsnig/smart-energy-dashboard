@@ -1,6 +1,5 @@
-from collections import Counter
 from datetime import datetime
-from typing import List, Tuple, Dict
+from typing import List, Dict
 from ..domain import EnergyPattern, EnergyPersonality, PersonalityType
 
 class PersonalityAnalyzer:

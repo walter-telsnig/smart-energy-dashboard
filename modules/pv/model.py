@@ -1,6 +1,5 @@
 # SQLAlchemy persistence model for PV series
 from datetime import datetime
-from typing import Optional
 from sqlalchemy import DateTime, Float
 from sqlalchemy.orm import Mapped, mapped_column
 from infra.db import Base

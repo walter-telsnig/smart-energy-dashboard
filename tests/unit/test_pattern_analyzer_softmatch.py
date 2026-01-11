@@ -1,4 +1,4 @@
-import pytest
+
 from datetime import datetime, timedelta, date
 from modules.pattern.services.pattern_analyzer import PatternAnalyzer
 from modules.pattern.domain import PatternType

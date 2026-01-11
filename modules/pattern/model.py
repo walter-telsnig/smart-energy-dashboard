@@ -1,6 +1,5 @@
-# SQLAlchemy models - pure persistence
+# SQLAlchemy modeOptionalls - pure persistence
 from datetime import datetime, date
-from typing import Optional
 from sqlalchemy import Integer, String, Float, DateTime, Date, JSON
 from sqlalchemy.orm import Mapped, mapped_column
 from infra.db import Base

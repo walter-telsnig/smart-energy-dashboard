@@ -11,7 +11,6 @@ Use --drop to drop & recreate the tables before importing.
 from __future__ import annotations
 
 import argparse
-import sys
 from pathlib import Path
 import logging
 

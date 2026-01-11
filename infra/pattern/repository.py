@@ -1,5 +1,5 @@
 # SQLAlchemy implementations
-from datetime import datetime, timedelta, date
+from datetime import datetime, date
 from typing import Optional, List, Tuple
 from sqlalchemy.orm import Session
 
