@@ -13,29 +13,34 @@ class SQLAlchemyPatternRepository(PatternRepositoryPort):
         self.session = session
     
     def create_pattern(self, pattern: EnergyPattern) -> EnergyPattern:
-        model = Pattern(
-            user_id=pattern.user_id,
-            pattern_type=pattern.pattern_type.value,
-            confidence=pattern.confidence,
-            description=pattern.description,
-            detected_at=pattern.detected_at,
-            start_date=pattern.start_date,
-            end_date=pattern.end_date
-        )
-        
-        self.session.add(model)
-        self.session.flush()
-        
-        return EnergyPattern(
-            id=model.id,
-            user_id=model.user_id,
-            pattern_type=PatternType(model.pattern_type),
-            confidence=model.confidence,
-            description=model.description,
-            detected_at=model.detected_at,
-            start_date=model.start_date,
-            end_date=model.end_date
-        )
+        try:
+            model = Pattern(
+                user_id=pattern.user_id,
+                pattern_type=pattern.pattern_type.value,
+                confidence=pattern.confidence,
+                description=pattern.description,
+                detected_at=pattern.detected_at,
+                start_date=pattern.start_date,
+                end_date=pattern.end_date
+            )
+            
+            self.session.add(model)
+            self.session.commit()  # Explicit commit
+            self.session.refresh(model)  # Refresh to get ID
+            
+            return EnergyPattern(
+                id=model.id,
+                user_id=model.user_id,
+                pattern_type=PatternType(model.pattern_type),
+                confidence=model.confidence,
+                description=model.description,
+                detected_at=model.detected_at,
+                start_date=model.start_date,
+                end_date=model.end_date
+            )
+        except Exception as e:
+            self.session.rollback()
+            raise e
     
     def get_user_patterns(self, user_id: int, limit: int = 100, offset: int = 0) -> List[EnergyPattern]:
         models = self.session.query(Pattern).filter(
@@ -57,6 +62,7 @@ class SQLAlchemyPatternRepository(PatternRepositoryPort):
         ]
     
     def get_consumption_data(self, user_id: int, start_date: date, end_date: date) -> List[Tuple[datetime, float]]:
+        """Get ALL community consumption data (ignore user_id)"""
         query = self.session.query(
             Consumption.datetime,
             Consumption.consumption_kwh
@@ -65,9 +71,18 @@ class SQLAlchemyPatternRepository(PatternRepositoryPort):
             Consumption.datetime <= datetime.combine(end_date, datetime.max.time())
         ).order_by(Consumption.datetime)
         
-        return [(row.datetime, row.consumption_kwh) for row in query.all()]
+        results = query.all()
+        
+        # Log for debugging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"Getting community consumption data: {start_date} to {end_date}")
+        logger.info(f"Found {len(results)} records")
+        
+        return [(row.datetime, row.consumption_kwh) for row in results]
     
     def get_pv_data(self, user_id: int, start_date: date, end_date: date) -> List[Tuple[datetime, float]]:
+        """Get ALL community PV data (ignore user_id)"""
         query = self.session.query(
             PV.datetime,
             PV.production_kw
@@ -107,8 +122,9 @@ class SQLAlchemyPersonalityRepository(PersonalityRepositoryPort):
             )
             self.session.add(model)
         
-        self.session.flush()
-        
+        self.session.commit()             
+        self.session.refresh(model)   
+            
         return EnergyPersonality(
             id=model.id,
             user_id=model.user_id,
