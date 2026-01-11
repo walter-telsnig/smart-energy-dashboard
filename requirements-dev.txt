@@ -8,3 +8,5 @@ psycopg2-binary
 types-psycopg2
 types-requests
 types-pytz
+playwright
+pytest-playwright
