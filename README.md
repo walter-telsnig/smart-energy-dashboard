@@ -145,6 +145,34 @@ cd tests/locust
 python.exe -m locust -f locustfile.py --host http://localhost:8000
 ```
 
+### End-to-End Testing with Cypress
+
+### 1. Prerequisites
+- **Node.js**
+- **npm**
+
+
+
+### 2. Install dependencies
+```powershell
+npm install
+```
+
+### 3. Run cypress test
+Ensure the application (Streamlit + FastAPI) is running and a test user exists with the following credentials before running Cypress tests:
+
+- Email: test@example.com
+- Password: pass
+### Headless
+```powershell
+npm run test:e2e
+```
+
+### Interactive
+```powershell
+npm run test:e2e:open
+```
+
 ## 🗺️ Project Scope & Roadmap
 
 The project development is divided into strategic milestones:
