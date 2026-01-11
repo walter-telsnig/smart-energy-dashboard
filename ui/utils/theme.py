@@ -178,7 +178,9 @@ def sidebar_nav(active: str = "Dashboard") -> None:
         nav_btn("🏠  Consumption", "pages/03_Consumption.py", "nav_consumption")
         nav_btn("📊  Compare", "pages/04_Compare.py", "nav_compare")
         nav_btn("✅  Recommendations", "pages/06_Recommendations.py", "nav_reco")
+        nav_btn("🔍  Patterns", "pages/15_Patterns.py", "nav_patterns")
         nav_btn("🔋  Battery Sim", "pages/99_Battery_Sim.py", "nav_battery")
+        
 
         # -------- Database Mode toggle --------
         st.session_state["show_db_mode"] = st.toggle(
