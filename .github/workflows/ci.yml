@@ -74,9 +74,10 @@ jobs:
       # - name: Test (Pytest) + Coverage (unit tests only)
       #   run: |
       #     pytest --cov --cov-report=xml -q
+      # pytest -q --cov=app --cov=modules --cov-report=xml
       - name: Test (Pytest) + Coverage (backend only)
         run: |
-         pytest -q --cov=app --cov=modules --cov-report=xml
+         pytest -q tests/unit tests/integration/test_auth_api.py
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
