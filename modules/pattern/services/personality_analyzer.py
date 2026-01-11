@@ -11,16 +11,9 @@ class PersonalityAnalyzer:
         if not patterns:
             return self._create_default_personality(user_id)
         
-        # Get dominant patterns (top 3 by confidence)
         dominant_patterns = self._get_dominant_patterns(patterns)
-        
-        # Determine personality type based on weighted scoring
         personality_type = self._determine_personality_type(patterns)
-        
-        # Calculate score based on pattern confidences
         score = self._calculate_personality_score(patterns, personality_type)
-        
-        # Get more descriptive description
         description = self._generate_dynamic_description(patterns, personality_type)
         
         return EnergyPersonality(
@@ -168,39 +161,32 @@ class PersonalityAnalyzer:
         ]
         
         if not relevant_patterns:
-            # If no directly relevant patterns, use average of all patterns
-            avg_confidence = sum(p.confidence for p in patterns) / len(patterns)
+            avg_confidence: float = sum(p.confidence for p in patterns) / len(patterns)  # Changed to float
         else:
-            # Weighted average based on relevance
-            weighted_sum = 0
-            total_weight = 0
+            weighted_sum: float = 0.0
+            total_weight: float = 0.0
             for pattern in patterns:
-                weight = 2.0 if self._is_pattern_relevant(pattern.pattern_type.value, personality_type) else 0.5
+                weight: float = 2.0 if self._is_pattern_relevant(pattern.pattern_type.value, personality_type) else 0.5
                 weighted_sum += pattern.confidence * weight
                 total_weight += weight
             
             avg_confidence = weighted_sum / total_weight if total_weight > 0 else 0.5
         
-        # Convert to 0-100 scale
-        base_score = avg_confidence * 100
+        base_score: float = avg_confidence * 100  # Changed from int to float
         
-        # CHANGED: More nuanced scoring adjustments
+        # CHANGED: Adjustments
         if personality_type == PersonalityType.BALANCED_USER:
-            # Boost Balanced scores slightly
-            score = min(100, base_score * 1.05)
+            score: float = min(100, base_score * 1.05)
         elif avg_confidence > 0.8:
-            # Strong patterns get small boost
             score = min(100, base_score * 1.05)
         elif avg_confidence < 0.4:
-            # Very weak patterns get penalty
             score = base_score * 0.85
         elif avg_confidence < 0.6:
-            # Moderate patterns stay as-is
             score = base_score * 0.95
         else:
             score = base_score
         
-        return int(max(0, min(100, score)))  # Ensure 0-100 range
+        return int(max(0, min(100, score)))
     
     def _generate_dynamic_description(self, patterns: List[EnergyPattern], 
                                     personality_type: PersonalityType) -> str:

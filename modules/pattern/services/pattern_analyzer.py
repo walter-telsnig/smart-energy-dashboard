@@ -1,6 +1,6 @@
 import pandas as pd
 from datetime import datetime, date
-from typing import List, Tuple
+from typing import List, Tuple, Optional, Dict
 from ..domain import EnergyPattern, PatternType
 
 class PatternAnalyzer:
@@ -9,7 +9,7 @@ class PatternAnalyzer:
     def analyze_consumption(self, data: List[Tuple[datetime, float]], 
                           user_id: int, start_date: date, end_date: date) -> List[EnergyPattern]:
         """Detect multiple energy usage patterns"""
-        patterns = []
+        patterns: List[EnergyPattern] = []
         
         if len(data) < 24:  # Need at least 24 hours
             return patterns
@@ -205,7 +205,7 @@ class PatternAnalyzer:
                        description: str, evidence: List[str], 
                        df: pd.DataFrame, user_id: int, 
                        start_date: date, end_date: date,
-                       metadata: dict = None) -> EnergyPattern:
+                       metadata: Optional[dict] = None) -> EnergyPattern:  # Fixed type for metadata
         """Helper to create pattern objects"""
         return EnergyPattern(
             id=None,
@@ -217,5 +217,5 @@ class PatternAnalyzer:
             start_date=start_date,
             end_date=end_date
         )
-    
+
     
