@@ -5,7 +5,7 @@
 import os
 from fastapi import FastAPI
 from dotenv import load_dotenv
-# from infra.db import Base, engine
+from infra.db import Base, engine
 
 from app.api.v1.accounts import router as accounts_router
 from app.api.v1.pv import router as pv_router
@@ -79,5 +79,5 @@ def create_app() -> FastAPI:
 
     return app
 
-# Base.metadata.create_all(bind=engine)  # dev/CI convenience
+Base.metadata.create_all(bind=engine)  # dev/CI convenience
 app = create_app()
