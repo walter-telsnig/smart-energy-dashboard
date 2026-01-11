@@ -212,9 +212,11 @@ class PatternAnalyzer:
             id=None,
             user_id=user_id,
             pattern_type=pattern_type,
-            confidence=round(confidence, 2),
+            confidence=round(float(confidence), 2), 
             description=description,
             detected_at=datetime.now(),
             start_date=start_date,
             end_date=end_date
         )
+    
+    
