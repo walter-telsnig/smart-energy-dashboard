@@ -1,0 +1,27 @@
+{
+  "name": "smart-energy-dashboard",
+  "version": "1.0.0",
+  "description": "[![Smart Energy Dashboard CI](https://github.com/walter-telsnig/smart-energy-dashboard/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/walter-telsnig/smart-energy-dashboard/actions/workflows/ci.yml?query=branch%3Amain)\r [![Hello Python](https://github.com/walter-telsnig/smart-energy-dashboard/actions/workflows/hello-python.yml/badge.svg)](https://github.com/walter-telsnig/smart-energy-dashboard/actions/workflows/hello-python.yml)\r [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=walter-telsnig_smart-energy-dashboard&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=walter-telsnig_smart-energy-dashboard)\r [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=walter-telsnig_smart-energy-dashboard&metric=bugs)](https://sonarcloud.io/summary/new_code?id=walter-telsnig_smart-energy-dashboard)",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/walter-telsnig/smart-energy-dashboard.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/walter-telsnig/smart-energy-dashboard/issues"
+  },
+  "homepage": "https://github.com/walter-telsnig/smart-energy-dashboard#readme",
+  "devDependencies": {
+    "cypress": "^15.8.2"
+  }
+}

@@ -40,3 +40,6 @@ hello.py
 
 # Private / Misc
 etc/
+
+
+node_modules/
