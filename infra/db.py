@@ -33,7 +33,14 @@ Base = declarative_base()
 # --- FastAPI dependency for DB session ---
 def get_db() -> Iterator[Session]:
     """
-    Yields a SQLAlchemy Session and ensures proper close.
+    Yield a SQLAlchemy Session for the request and commit/rollback on exit.
+
+    Behavior:
+    - Yields a Session for the dependency scope
+    - If the request completes without exceptions, commits the session
+    - On exception, performs rollback then re-raises
+    - Always closes the session
+
     Usage:
         from fastapi import Depends
         from sqlalchemy.orm import Session
@@ -46,5 +53,11 @@ def get_db() -> Iterator[Session]:
     db = SessionLocal()
     try:
         yield db
+        # commit if everything in the request succeeded
+        db.commit()
+    except Exception:
+        # rollback on error so partial work is not persisted
+        db.rollback()
+        raise
     finally:
         db.close()
